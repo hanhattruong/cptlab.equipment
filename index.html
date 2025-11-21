@@ -1,135 +1,60 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>QR → Thiết Bị theo Code</title>
-
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
-<style>
-body { font-family: Arial; padding: 15px; }
-#reader { width: 300px; margin: auto; }
-#info-box {
-  margin-top: 20px;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  background: #f7f7f7;
-  font-size: 14px;
-}
-.row { margin-bottom: 6px; }
-.label { font-weight: bold; color: #004; width: 160px; display: inline-block; }
-#manual-input { margin-top: 20px; text-align: center; }
-#manual-input input { width: 200px; padding: 5px; font-size: 14px; }
-#manual-input button { padding: 5px 10px; font-size: 14px; }
-</style>
+<meta charset="utf-8">
+<title>Thiết bị</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-
-<h2>Quét QR hoặc nhập Code để lấy thông tin thiết bị</h2>
-
-<div id="reader"></div>
-
-<h3>Code quét được:</h3>
-<div id="result">Chưa quét</div>
-
-<!-- Ô nhập tay -->
-<div id="manual-input">
-  <input type="text" id="manual-code" placeholder="Nhập Code thiết bị..." />
-  <button onclick="searchCode()">Tìm</button>
-</div>
-
-<h3>Thông tin thiết bị:</h3>
-<div id="info-box">Không có dữ liệu</div>
+<h2>Thông tin thiết bị</h2>
+<div id="output">Đang tải dữ liệu...</div>
 
 <script>
-// Thay bằng link CSV public
-const CSV_URL = "https://ttigroup-my.sharepoint.com/:x:/g/personal/nhattruong_ha_ttigroup_com_vn/IQCydKnEOE9BRZwb_A6M19n1AXP5nPuo8wJfNFrLBAcZPo8?e=hDg30j&nav=MTVfezZDRkJGQTVFLTNGREQtNDlDNy04NkFCLTgzREVEN0U4NEUwNn0";
+// === 1. Lấy code từ URL ===
+const urlParams = new URLSearchParams(window.location.search);
+const deviceCode = urlParams.get("code");
 
-const COLUMNS = [
-  "Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
-  "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
-  "Responsible_By","Team","Location","Picture","Function","Week Control",
-  "Purchase_Date","Supplier","Received_By","PO_No",
-  "Calibration_Date","Due_Date","PM_Date","Next_PM",
-  "Status","Remark"
-];
-
-// Format ngày dd/MM/yyyy
-function formatDate(value) {
-  if (!value) return "";
-  let d = new Date(value);
-  if (d.toString() === "Invalid Date") return value;
-  return d.getDate().toString().padStart(2,"0") + "/" +
-         (d.getMonth()+1).toString().padStart(2,"0") + "/" +
-         d.getFullYear();
+if (!deviceCode) {
+    document.getElementById("output").innerHTML = "Không tìm thấy mã thiết bị.";
+    throw "";
 }
 
-// Load CSV bằng PapaParse
-let cachedRows = null;
-async function loadCSV() {
-  if (cachedRows) return cachedRows;
-  return new Promise(resolve => {
-    Papa.parse(CSV_URL, { download: true, header: true,
-      complete: result => {
-        cachedRows = result.data;
-        resolve(cachedRows);
+// === 2. Link Excel OneDrive (direct download) ===
+// Share link OneDrive → đổi "redir?resid" thành "download?resid"
+const EXCEL_URL = "YOUR_ONEDRIVE_DIRECT_DOWNLOAD_LINK.xlsx";
+
+// === 3. Tải file Excel ===
+fetch(EXCEL_URL)
+  .then(res => res.arrayBuffer())
+  .then(buffer => {
+      const data = new Uint8Array(buffer);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+
+      // === 4. Tìm thiết bị theo code ===
+      const item = rows.find(r => r.CODE == deviceCode);
+
+      if (!item) {
+          document.getElementById("output").innerHTML = "Không tìm thấy thiết bị: " + deviceCode;
+          return;
       }
-    });
+
+      // === 5. Hiển thị thông tin ===
+      let html = `<b>Mã thiết bị:</b> ${item.CODE}<br>
+                  <b>Tên:</b> ${item.NAME}<br>
+                  <b>Model:</b> ${item.MODEL}<br>
+                  <b>Serial:</b> ${item.SERIAL}<br>
+                  <b>Ngày mua:</b> ${item.PURCHASE_DATE}<br>
+                  <b>Ghi chú:</b> ${item.NOTE}`;
+
+      document.getElementById("output").innerHTML = html;
+  })
+  .catch(err => {
+      document.getElementById("output").innerHTML = "Lỗi tải dữ liệu";
+      console.error(err);
   });
-}
-
-// Hiển thị thông tin thiết bị theo Code
-async function showInfo(code) {
-  const rows = await loadCSV();
-  let item = rows.find(r => r.Code === code);
-
-  if (!item) {
-    document.getElementById("info-box").innerHTML = "<b>Không tìm thấy thiết bị!</b>";
-    return;
-  }
-
-  let html = "";
-  COLUMNS.forEach(col => {
-    let value = item[col] ?? "";
-    if (["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"].includes(col)) {
-      value = formatDate(value);
-    }
-    html += `<div class='row'><span class='label'>${col}:</span> ${value}</div>`;
-  });
-  document.getElementById("info-box").innerHTML = html;
-  document.getElementById("result").innerHTML = code;
-}
-
-// Hàm gọi khi nhấn nút Tìm
-function searchCode() {
-  const code = document.getElementById("manual-code").value.trim();
-  if (code) showInfo(code);
-}
-
-// Bắt đầu quét QR
-async function startScanner() {
-  const cameras = await Html5Qrcode.getCameras();
-  let backCam = cameras.find(cam =>
-    cam.label.toLowerCase().includes("back") ||
-    cam.label.toLowerCase().includes("rear") ||
-    cam.label.toLowerCase().includes("environment")
-  );
-  const cameraId = backCam ? backCam.id : cameras[cameras.length-1].id;
-
-  const scanner = new Html5Qrcode("reader");
-  scanner.start(
-    cameraId,
-    { fps: 10, qrbox: 250 },
-    decodedText => {
-      showInfo(decodedText);
-      scanner.stop();
-    }
-  );
-}
-
-startScanner();
 </script>
 
 </body>
