@@ -2,15 +2,20 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Thiết bị</title>
+<title>Thông tin thiết bị</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  #output { padding: 10px; border: 1px solid #ccc; width: 400px; }
+</style>
 </head>
 <body>
+
 <h2>Thông tin thiết bị</h2>
 <div id="output">Đang tải dữ liệu...</div>
 
 <script>
-// === 1. Lấy code từ URL ===
+// 1️⃣ Lấy code từ URL
 const urlParams = new URLSearchParams(window.location.search);
 const deviceCode = urlParams.get("code");
 
@@ -19,21 +24,31 @@ if (!deviceCode) {
     throw "";
 }
 
-// === 2. Link Excel OneDrive (direct download) ===
-// Share link OneDrive → đổi "redir?resid" thành "download?resid"
-const EXCEL_URL = "YOUR_ONEDRIVE_DIRECT_DOWNLOAD_LINK.xlsx";
+// 2️⃣ Link Excel SharePoint “Anyone with the link”
+const EXCEL_URL = "https://ttigroup-my.sharepoint.com/:x:/g/personal/nhattruong_ha_ttigroup_com_vn/IQCydKnEOE9BRZwb_A6M19n1AcmD8lBxgMc1sWaCQgjpi3Q?download=1";
 
-// === 3. Tải file Excel ===
+// 3️⃣ Tải file Excel
 fetch(EXCEL_URL)
   .then(res => res.arrayBuffer())
   .then(buffer => {
-      const data = new Uint8Array(buffer);
-      const workbook = XLSX.read(data, { type: "array" });
+      const workbook = XLSX.read(buffer, { type: "array" });
 
+      // 4️⃣ Lấy sheet đầu tiên (giả sử table EquipmentList ở sheet này)
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet);
 
-      // === 4. Tìm thiết bị theo code ===
+      // 5️⃣ Kiểm tra table EquipmentList
+      if (!sheet["!tables"] || !sheet["!tables"]["EquipmentList"]) {
+          document.getElementById("output").innerHTML = "Không tìm thấy bảng EquipmentList trong file Excel.";
+          return;
+      }
+
+      const tbl = sheet["!tables"]["EquipmentList"];
+      const range = tbl.ref; // ví dụ "A1:F200"
+
+      // 6️⃣ Chỉ lấy vùng table
+      const rows = XLSX.utils.sheet_to_json(sheet, { range: range });
+
+      // 7️⃣ Tìm thiết bị theo CODE
       const item = rows.find(r => r.CODE == deviceCode);
 
       if (!item) {
@@ -41,20 +56,21 @@ fetch(EXCEL_URL)
           return;
       }
 
-      // === 5. Hiển thị thông tin ===
-      let html = `<b>Mã thiết bị:</b> ${item.CODE}<br>
-                  <b>Tên:</b> ${item.NAME}<br>
-                  <b>Model:</b> ${item.MODEL}<br>
-                  <b>Serial:</b> ${item.SERIAL}<br>
-                  <b>Ngày mua:</b> ${item.PURCHASE_DATE}<br>
-                  <b>Ghi chú:</b> ${item.NOTE}`;
+      // 8️⃣ Hiển thị thông tin
+      let html = `
+        <b>Mã thiết bị:</b> ${item.CODE}<br>
+        <b>Tên:</b> ${item.NAME || ""}<br>
+        <b>Model:</b> ${item.MODEL || ""}<br>
+        <b>Serial:</b> ${item.SERIAL || ""}<br>
+        <b>Ngày mua:</b> ${item.PURCHASE_DATE || ""}<br>
+        <b>Ghi chú:</b> ${item.NOTE || ""}<br>
+      `;
 
       document.getElementById("output").innerHTML = html;
   })
   .catch(err => {
-      document.getElementById("output").innerHTML = "Lỗi tải dữ liệu";
       console.error(err);
-  });
+      document.getElementById("output").innerHTML = "Lỗi tải dữ liệu";  });
 </script>
 
 </body>
