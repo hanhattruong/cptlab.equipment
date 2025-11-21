@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>QR Scan → Excel Online</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    #info { margin-top: 20px; font-size: 14px; line-height: 1.5; }
+    b { color: #333; }
+  </style>
+</head>
+<body>
+  <h2>Thông tin thiết bị</h2>
+  <div id="info">Đang tải dữ liệu...</div>
+
+  <script>
+    // ===== Thay các giá trị =====
+    const accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6InRUTjgxRVRLZnd3cUw2Y2hGWmFXcW5za3JaWUgyNF94LWR5TlhMTmhpSXciLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84YjhjYzZjZi0wZWFhLTRiNjQtOThlNC02ZDQ2NzJjNDQ5MzAvIiwiaWF0IjoxNzYzNjkzNzUyLCJuYmYiOjE3NjM2OTM3NTIsImV4cCI6MTc2Mzc4MDQ1MiwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsiYzEiLCJjMiJdLCJhaW8iOiJBVVFBdS84YUFBQUF0VXgzVVB0aXluSmRrMk01UUYrMGwwWUd3dXhTN09EYXFIRklaMkRsVkxFVEp4SkZUelBzNGhBV3ZnbmRPbklKOThTMjdWaUZtVVduKzV3ZzZqeWlYQT09IiwiYW1yIjpbInB3ZCIsInJzYSJdLCJhcHBfZGlzcGxheW5hbWUiOiJHcmFwaCBFeHBsb3JlciIsImFwcGlkIjoiZGU4YmM4YjUtZDlmOS00OGIxLWE4YWQtYjc0OGRhNzI1MDY0IiwiYXBwaWRhY3IiOiIwIiwiY2Fwb2xpZHNfbGF0ZWJpbmQiOlsiNmU2OTdhNmEtNzBjNS00ZDQ2LWI0MTItMzU1MWZjMDA3NWMwIl0sImRldmljZWlkIjoiNDgzZTcyMTAtYTM5Zi00MjI0LWIwMzEtZjBhNWJjMTk4NmYwIiwiZmFtaWx5X25hbWUiOiJIYSIsImdpdmVuX25hbWUiOiJOaGF0IFRydW9uZyIsImlkdHlwIjoidXNlciIsImlwYWRkciI6IjQyLjExNi41MS40MCIsIm5hbWUiOiJTYXZpIEhhIE5oYXQgVHJ1b25nIChWTi5SWU9CSS1MQUIpIiwib2lkIjoiZDQxYmZhZGYtOWQ4Zi00Y2QyLTk1MGMtYmM0N2U0NzYxYjg1Iiwib25wcmVtX3NpZCI6IlMtMS01LTIxLTQ5NDA4NzA1NS0zNzkxMDQ5MjctMTU2NDYwOTE2Ni0zMzk2MzI5IiwicGxhdGYiOiIzIiwicHVpZCI6IjEwMDMyMDAyOTM0Q0FDMDMiLCJyaCI6IjEuQVhJQXo4YU1pNm9PWkV1WTVHMUdjc1JKTUFNQUFBQUFBQUFBd0FBQUFBQUFBQUNHQWFCeUFBLiIsInNjcCI6IkNhbGVuZGFycy5SZWFkV3JpdGUgQ29udGFjdHMuUmVhZFdyaXRlIERldmljZS5SZWFkLkFsbCBEZXZpY2VNYW5hZ2VtZW50Q29uZmlndXJhdGlvbi5SZWFkLkFsbCBEaXJlY3RvcnkuUmVhZC5BbGwgRGlyZWN0b3J5LlJlYWRXcml0ZS5BbGwgRmlsZXMuUmVhZFdyaXRlLkFsbCBNYWlsLlJlYWRXcml0ZSBOb3Rlcy5SZWFkV3JpdGUuQWxsIG9wZW5pZCBQZW9wbGUuUmVhZCBwcm9maWxlIFNpdGVzLlJlYWRXcml0ZS5BbGwgVGFza3MuUmVhZFdyaXRlIFVzZXIuUmVhZCBVc2VyLlJlYWRCYXNpYy5BbGwgVXNlci5SZWFkV3JpdGUgZW1haWwiLCJzaWQiOiIwMDhkMDVhOS04ODgyLTNjZDgtYWQ1OS03ODdkYjkyNDg0NTAiLCJzaWduaW5fc3RhdGUiOlsiZHZjX21uZ2QiLCJkdmNfY21wIiwiZHZjX2RtamQiLCJpbmtub3dubnR3ayIsImttc2kiXSwic3ViIjoiQXo3dnB4OUVYME1fWEx6NkNPeHFZOUJyaE1nNkRFSGlQNmF0RXg3ZjgwSSIsInRlbmFudF9yZWdpb25fc2NvcGUiOiJBUyIsInRpZCI6IjhiOGNjNmNmLTBlYWEtNGI2NC05OGU0LTZkNDY3MmM0NDkzMCIsInVuaXF1ZV9uYW1lIjoiTmhhdFRydW9uZy5IYUB0dGlncm91cC5jb20udm4iLCJ1cG4iOiJOaGF0VHJ1b25nLkhhQHR0aWdyb3VwLmNvbS52biIsInV0aSI6IlE5WnkzTGVYSUVHSFkwX0VTTjRKQUEiLCJ2ZXIiOiIxLjAiLCJ3aWRzIjpbImI3OWZiZjRkLTNlZjktNDY4OS04MTQzLTc2YjE5NGU4NTUwOSJdLCJ4bXNfYWNkIjoxNDc0NjY0MDczLCJ4bXNfYWN0X2ZjdCI6IjcgMyIsInhtc19jYyI6WyJDUDEiXSwieG1zX2Z0ZCI6InBnZ3RvSGZzbFNNMVhhTnl3UXJLbVRrbldhTTFQSW9RdUxhbWZzYzdYZk1CYW1Gd1lXNWxZWE4wTFdSemJYTSIsInhtc19pZHJlbCI6IjIwIDEiLCJ4bXNfc3NtIjoiMSIsInhtc19zdCI6eyJzdWIiOiJ0Wmx6dkhoaXRrWjIycFZUQnRkVnNiNk9DUUJpcmFPajlLNDBQZ2JLVHdzIn0sInhtc19zdWJfZmN0IjoiMyA4IiwieG1zX3RjZHQiOjE0MzcxMTkyNzEsInhtc190bnRfZmN0IjoiNiAzIn0.NFCIoV8n-Z1Sl1zVSw_o5hdee3tHQJ1-lVoIiSwHvf8ulTpEl4QFMBtFLY_p_H0aCszTV3sHXqQq-7PMU-HGh5v2xhEyINWCP_IX1VkI4HdbNUNVKs8AcizCz1E8zWKOIg0XnUp2lrNaKX4vMnhrgze3XQVn9x9vZFQNr1II6fzPfxhOnPmP6X4HlwMT7NPLC9VrVmd225z_R0CzUSRRe5raLyenrz_HSddCGvoFwNEy2ljZIRWbBZ47NridzjeC_3w3FZ_6YOSubi3m_qPDjUehripgUxtABlJrXtZXGGdERhsu7erWrEMNCoNXaW9QlT-xvT15qdbylWe5pWxShw"; // token tạm thời
+    const driveId = "b!1FxBlWj8ekuwPxAKTD-bpQEmUDASyytPjgSNLCERr-cX4itvhM5iRaNcje-tpPux";
+    const itemId = "01CPEFVA5SOSU4IOCPIFCZYG74B2GNPWPV";
+    const tableName = "EquipmentList";
+    const colNames = ["Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
+                      "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
+                      "Responsible_By","Team","Location","Picture","Function","Week Control",
+                      "Purchase_Date","Supplier","Received_By","PO_No","Calibration_Date",
+                      "Due_Date","PM_Date","Next_PM","Status","Remark"];
+
+    // Lấy code thiết bị từ URL
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if(!code){
+      document.getElementById("info").innerText = "Chưa có mã thiết bị trong URL!";
+    } else {
+      fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableName}/rows`, {
+        headers: { "Authorization": `Bearer ${accessToken}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const row = data.value.find(r => r.values[0][0] === code);
+        if(row){
+          let html = "";
+          row.values[0].forEach((val,i) => {
+            html += `<b>${colNames[i]}:</b> ${val}<br>`;
+          });
+          document.getElementById("info").innerHTML = html;
+        } else {
+          document.getElementById("info").innerText = "Không tìm thấy thiết bị!";
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("info").innerText = "Lỗi khi lấy dữ liệu!";
+      });
+    }
+  </script>
+</body>
+</html>
