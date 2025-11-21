@@ -2,78 +2,123 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Quét QR - Camera sau</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <title>QR → Thông Tin Thiết Bị</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
   <style>
-    body { font-family: Arial; padding: 10px; }
-    #reader { width: 300px; margin: 0 auto; }
-    #result { margin-top: 15px; word-break: break-all; }
-    button { padding: 8px 12px; margin-top: 10px; }
+    body { font-family: Arial; padding: 15px; }
+    #reader { width: 300px; margin: auto; }
+    #info-box {
+      margin-top: 20px;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #f7f7f7;
+      font-size: 14px;
+    }
+    .row { margin-bottom: 6px; }
+    .label { font-weight: bold; color: #004; width: 160px; display: inline-block; }
   </style>
 </head>
 <body>
-  <h3>Quét QR bằng camera sau</h3>
+
+  <h2>Quét QR lấy thông tin thiết bị</h2>
 
   <div id="reader"></div>
 
-  <div id="result">
-    Kết quả: <span id="result-text">Chưa quét</span>
-  </div>
+  <h3>ID quét được:</h3>
+  <div id="result">Chưa quét</div>
 
-  <button id="start-btn">Bắt đầu quét</button>
-  <button id="stop-btn">Dừng</button>
+  <h3>Thông tin thiết bị:</h3>
+  <div id="info-box">Không có dữ liệu</div>
 
-  <script>
-    const html5QrCode = new Html5Qrcode("reader");
-    let isScanning = false;
+<script>
 
-    async function startScan() {
-      if (isScanning) return;
-      isScanning = true;
+  // 👉 THAY LINK CSV CỦA M VÀO ĐÂY
+  const CSV_URL = "https://ttigroup-my.sharepoint.com/:x:/g/personal/nhattruong_ha_ttigroup_com_vn/IQCydKnEOE9BRZwb_A6M19n1AXP5nPuo8wJfNFrLBAcZPo8?e=TX4IaO";
 
-      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+  // Danh sách cột theo đúng thứ tự
+  const COLUMNS = [
+    "Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
+    "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
+    "Responsible_By","Team","Location","Picture","Function","Week Control",
+    "Purchase_Date","Supplier","Received_By","PO_No",
+    "Calibration_Date","Due_Date","PM_Date","Next_PM",
+    "Status","Remark"
+  ];
 
-      try {
-        const cameras = await Html5Qrcode.getCameras();
-        if (!cameras.length) {
-          alert("Không tìm thấy camera!");
+  // Format ngày dd/MM/yyyy
+  function formatDate(value) {
+    if (!value) return "";
+    let d = new Date(value);
+    if (d.toString() === "Invalid Date") return value; // giữ nguyên nếu không phải ngày
+    return d.getDate().toString().padStart(2, "0") + "/" +
+           (d.getMonth() + 1).toString().padStart(2, "0") + "/" +
+           d.getFullYear();
+  }
+
+  // Load CSV bằng PapaParse
+  function loadCSV() {
+    return new Promise(resolve => {
+      Papa.parse(CSV_URL, {
+        download: true,
+        header: true,
+        complete: result => resolve(result.data)
+      });
+    });
+  }
+
+  async function startScanner() {
+    const cameras = await Html5Qrcode.getCameras();
+
+    let backCam = cameras.find(cam =>
+      cam.label.toLowerCase().includes("back") ||
+      cam.label.toLowerCase().includes("rear") ||
+      cam.label.toLowerCase().includes("environment")
+    );
+
+    const cameraId = backCam ? backCam.id : cameras[cameras.length - 1].id;
+
+    const scanner = new Html5Qrcode("reader");
+    scanner.start(
+      cameraId,
+      { fps: 10, qrbox: 250 },
+      async (decodedText) => {
+        document.getElementById("result").innerHTML = decodedText;
+
+        const rows = await loadCSV();
+
+        // tìm theo Code (ID QR)
+        let item = rows.find(r => r.Code === decodedText);
+
+        if (!item) {
+          document.getElementById("info-box").innerHTML = "<b>Không tìm thấy thiết bị!</b>";
           return;
         }
 
-        // 🔥 CHỌN CAMERA SAU
-        let backCam = cameras.find(cam =>
-          cam.label.toLowerCase().includes("back") ||
-          cam.label.toLowerCase().includes("rear") ||
-          cam.label.toLowerCase().includes("environment")
-        );
+        // Tạo HTML hiển thị theo đúng thứ tự cột
+        let html = "";
+        COLUMNS.forEach(col => {
+          let value = item[col] ?? "";
 
-        // Nếu vẫn không thấy, fallback lấy camera cuối (thường là camera sau)
-        const cameraId = backCam ? backCam.id : cameras[cameras.length - 1].id;
-
-        html5QrCode.start(
-          cameraId,
-          config,
-          (decodedText) => {
-            document.getElementById("result-text").textContent = decodedText;
+          // format ngày nếu là cột ngày
+          if (["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"].includes(col)) {
+            value = formatDate(value);
           }
-        );
 
-      } catch (err) {
-        console.error(err);
-        alert("Không sử dụng được camera!");
-        isScanning = false;
+          html += `<div class='row'><span class='label'>${col}:</span> ${value}</div>`;
+        });
+
+        document.getElementById("info-box").innerHTML = html;
       }
-    }
+    );
+  }
 
-    function stopScan() {
-      if (!isScanning) return;
-      html5QrCode.stop().then(() => {
-        isScanning = false;
-      });
-    }
+  startScanner();
 
-    document.getElementById("start-btn").addEventListener("click", startScan);
-    document.getElementById("stop-btn").addEventListener("click", stopScan);
-  </script>
+</script>
+
 </body>
 </html>
