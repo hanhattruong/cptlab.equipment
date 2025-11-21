@@ -1,125 +1,114 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <title>QR → Thông Tin Thiết Bị</title>
+<meta charset="UTF-8">
+<title>QR → Thiết Bị theo Code</title>
 
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-  <style>
-    body { font-family: Arial; padding: 15px; }
-    #reader { width: 300px; margin: auto; }
-    #info-box {
-      margin-top: 20px;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      background: #f7f7f7;
-      font-size: 14px;
-    }
-    .row { margin-bottom: 6px; }
-    .label { font-weight: bold; color: #004; width: 160px; display: inline-block; }
-  </style>
+<style>
+body { font-family: Arial; padding: 15px; }
+#reader { width: 300px; margin: auto; }
+#info-box {
+  margin-top: 20px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #f7f7f7;
+  font-size: 14px;
+}
+.row { margin-bottom: 6px; }
+.label { font-weight: bold; color: #004; width: 160px; display: inline-block; }
+</style>
 </head>
 <body>
 
-  <h2>Quét QR lấy thông tin thiết bị</h2>
+<h2>Quét QR lấy thông tin thiết bị theo Code</h2>
 
-  <div id="reader"></div>
+<div id="reader"></div>
 
-  <h3>ID quét được:</h3>
-  <div id="result">Chưa quét</div>
+<h3>Code quét được:</h3>
+<div id="result">Chưa quét</div>
 
-  <h3>Thông tin thiết bị:</h3>
-  <div id="info-box">Không có dữ liệu</div>
+<h3>Thông tin thiết bị:</h3>
+<div id="info-box">Không có dữ liệu</div>
 
 <script>
+// 👉 Thay bằng link CSV public
+const CSV_URL = "https://raw.githubusercontent.com/your/repo/main/devices.csv";
 
-  // 👉 THAY LINK CSV CỦA M VÀO ĐÂY
-  const CSV_URL = "https://ttigroup-my.sharepoint.com/:x:/g/personal/nhattruong_ha_ttigroup_com_vn/IQCydKnEOE9BRZwb_A6M19n1AXP5nPuo8wJfNFrLBAcZPo8?e=nwUnPf&nav=MTVfezZDRkJGQTVFLTNGREQtNDlDNy04NkFCLTgzREVEN0U4NEUwNn0";
+const COLUMNS = [
+  "Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
+  "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
+  "Responsible_By","Team","Location","Picture","Function","Week Control",
+  "Purchase_Date","Supplier","Received_By","PO_No",
+  "Calibration_Date","Due_Date","PM_Date","Next_PM",
+  "Status","Remark"
+];
 
-  // Danh sách cột theo đúng thứ tự
-  const COLUMNS = [
-    "Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
-    "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
-    "Responsible_By","Team","Location","Picture","Function","Week Control",
-    "Purchase_Date","Supplier","Received_By","PO_No",
-    "Calibration_Date","Due_Date","PM_Date","Next_PM",
-    "Status","Remark"
-  ];
+// Format ngày dd/MM/yyyy
+function formatDate(value) {
+  if (!value) return "";
+  let d = new Date(value);
+  if (d.toString() === "Invalid Date") return value;
+  return d.getDate().toString().padStart(2,"0") + "/" +
+         (d.getMonth()+1).toString().padStart(2,"0") + "/" +
+         d.getFullYear();
+}
 
-  // Format ngày dd/MM/yyyy
-  function formatDate(value) {
-    if (!value) return "";
-    let d = new Date(value);
-    if (d.toString() === "Invalid Date") return value; // giữ nguyên nếu không phải ngày
-    return d.getDate().toString().padStart(2, "0") + "/" +
-           (d.getMonth() + 1).toString().padStart(2, "0") + "/" +
-           d.getFullYear();
-  }
-
-  // Load CSV bằng PapaParse
-  function loadCSV() {
-    return new Promise(resolve => {
-      Papa.parse(CSV_URL, {
-        download: true,
-        header: true,
-        complete: result => resolve(result.data)
-      });
+// Load CSV bằng PapaParse
+function loadCSV() {
+  return new Promise(resolve => {
+    Papa.parse(CSV_URL, { download: true, header: true,
+      complete: result => resolve(result.data)
     });
-  }
+  });
+}
 
-  async function startScanner() {
-    const cameras = await Html5Qrcode.getCameras();
+async function startScanner() {
+  const cameras = await Html5Qrcode.getCameras();
+  let backCam = cameras.find(cam =>
+    cam.label.toLowerCase().includes("back") ||
+    cam.label.toLowerCase().includes("rear") ||
+    cam.label.toLowerCase().includes("environment")
+  );
+  const cameraId = backCam ? backCam.id : cameras[cameras.length-1].id;
 
-    let backCam = cameras.find(cam =>
-      cam.label.toLowerCase().includes("back") ||
-      cam.label.toLowerCase().includes("rear") ||
-      cam.label.toLowerCase().includes("environment")
-    );
+  const scanner = new Html5Qrcode("reader");
+  scanner.start(
+    cameraId,
+    { fps: 10, qrbox: 250 },
+    async (decodedText) => {
+      document.getElementById("result").innerHTML = decodedText;
 
-    const cameraId = backCam ? backCam.id : cameras[cameras.length - 1].id;
+      const rows = await loadCSV();
+      // 🔍 Tra theo cột Code
+      let item = rows.find(r => r.Code === decodedText);
 
-    const scanner = new Html5Qrcode("reader");
-    scanner.start(
-      cameraId,
-      { fps: 10, qrbox: 250 },
-      async (decodedText) => {
-        document.getElementById("result").innerHTML = decodedText;
-
-        const rows = await loadCSV();
-
-        // tìm theo Code (ID QR)
-        let item = rows.find(r => r.Code === decodedText);
-
-        if (!item) {
-          document.getElementById("info-box").innerHTML = "<b>Không tìm thấy thiết bị!</b>";
-          return;
-        }
-
-        // Tạo HTML hiển thị theo đúng thứ tự cột
-        let html = "";
-        COLUMNS.forEach(col => {
-          let value = item[col] ?? "";
-
-          // format ngày nếu là cột ngày
-          if (["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"].includes(col)) {
-            value = formatDate(value);
-          }
-
-          html += `<div class='row'><span class='label'>${col}:</span> ${value}</div>`;
-        });
-
-        document.getElementById("info-box").innerHTML = html;
+      if (!item) {
+        document.getElementById("info-box").innerHTML = "<b>Không tìm thấy thiết bị!</b>";
+        return;
       }
-    );
-  }
 
-  startScanner();
+      let html = "";
+      COLUMNS.forEach(col => {
+        let value = item[col] ?? "";
+        if (["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"].includes(col)) {
+          value = formatDate(value);
+        }
+        html += `<div class='row'><span class='label'>${col}:</span> ${value}</div>`;
+      });
 
+      document.getElementById("info-box").innerHTML = html;
+    }
+  );
+}
+
+startScanner();
 </script>
 
 </body>
 </html>
+
 
