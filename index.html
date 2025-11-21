@@ -2,17 +2,17 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Quét QR</title>
+  <title>Quét QR - Camera sau</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 10px; }
+    body { font-family: Arial; padding: 10px; }
     #reader { width: 300px; margin: 0 auto; }
-    #result { margin-top: 15px; font-size: 16px; word-break: break-all; }
-    button { margin-top: 10px; padding: 8px 12px; }
+    #result { margin-top: 15px; word-break: break-all; }
+    button { padding: 8px 12px; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h3>Quét QR bằng camera</h3>
+  <h3>Quét QR bằng camera sau</h3>
 
   <div id="reader"></div>
 
@@ -35,27 +35,32 @@
 
       try {
         const cameras = await Html5Qrcode.getCameras();
-        if (cameras && cameras.length) {
-          const cameraId = cameras[0].id; // camera đầu tiên (thường là camera sau trên điện thoại)
-          html5QrCode.start(
-            cameraId,
-            config,
-            (decodedText, decodedResult) => {
-              document.getElementById("result-text").textContent = decodedText;
-              // Nếu muốn dừng ngay khi quét xong:
-              // html5QrCode.stop();
-              // isScanning = false;
-            },
-            (errorMessage) => {
-              // console.log("Lỗi đọc tạm thời:", errorMessage);
-            }
-          );
-        } else {
-          alert("Không tìm thấy camera");
+        if (!cameras.length) {
+          alert("Không tìm thấy camera!");
+          return;
         }
+
+        // 🔥 CHỌN CAMERA SAU
+        let backCam = cameras.find(cam =>
+          cam.label.toLowerCase().includes("back") ||
+          cam.label.toLowerCase().includes("rear") ||
+          cam.label.toLowerCase().includes("environment")
+        );
+
+        // Nếu vẫn không thấy, fallback lấy camera cuối (thường là camera sau)
+        const cameraId = backCam ? backCam.id : cameras[cameras.length - 1].id;
+
+        html5QrCode.start(
+          cameraId,
+          config,
+          (decodedText) => {
+            document.getElementById("result-text").textContent = decodedText;
+          }
+        );
+
       } catch (err) {
         console.error(err);
-        alert("Không truy cập được camera");
+        alert("Không sử dụng được camera!");
         isScanning = false;
       }
     }
@@ -64,8 +69,6 @@
       if (!isScanning) return;
       html5QrCode.stop().then(() => {
         isScanning = false;
-      }).catch(err => {
-        console.error("Lỗi dừng:", err);
       });
     }
 
