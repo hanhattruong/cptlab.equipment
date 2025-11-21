@@ -20,22 +20,31 @@ body { font-family: Arial; padding: 15px; }
 }
 .row { margin-bottom: 6px; }
 .label { font-weight: bold; color: #004; width: 160px; display: inline-block; }
+#manual-input { margin-top: 20px; text-align: center; }
+#manual-input input { width: 200px; padding: 5px; font-size: 14px; }
+#manual-input button { padding: 5px 10px; font-size: 14px; }
 </style>
 </head>
 <body>
 
-<h2>Quét QR lấy thông tin thiết bị theo Code</h2>
+<h2>Quét QR hoặc nhập Code để lấy thông tin thiết bị</h2>
 
 <div id="reader"></div>
 
 <h3>Code quét được:</h3>
 <div id="result">Chưa quét</div>
 
+<!-- Ô nhập tay -->
+<div id="manual-input">
+  <input type="text" id="manual-code" placeholder="Nhập Code thiết bị..." />
+  <button onclick="searchCode()">Tìm</button>
+</div>
+
 <h3>Thông tin thiết bị:</h3>
 <div id="info-box">Không có dữ liệu</div>
 
 <script>
-// 👉 Thay bằng link CSV public
+// Thay bằng link CSV public
 const CSV_URL = "https://ttigroup-my.sharepoint.com/:x:/g/personal/nhattruong_ha_ttigroup_com_vn/IQCydKnEOE9BRZwb_A6M19n1AXP5nPuo8wJfNFrLBAcZPo8?e=hDg30j&nav=MTVfezZDRkJGQTVFLTNGREQtNDlDNy04NkFCLTgzREVEN0U4NEUwNn0";
 
 const COLUMNS = [
@@ -58,14 +67,48 @@ function formatDate(value) {
 }
 
 // Load CSV bằng PapaParse
-function loadCSV() {
+let cachedRows = null;
+async function loadCSV() {
+  if (cachedRows) return cachedRows;
   return new Promise(resolve => {
     Papa.parse(CSV_URL, { download: true, header: true,
-      complete: result => resolve(result.data)
+      complete: result => {
+        cachedRows = result.data;
+        resolve(cachedRows);
+      }
     });
   });
 }
 
+// Hiển thị thông tin thiết bị theo Code
+async function showInfo(code) {
+  const rows = await loadCSV();
+  let item = rows.find(r => r.Code === code);
+
+  if (!item) {
+    document.getElementById("info-box").innerHTML = "<b>Không tìm thấy thiết bị!</b>";
+    return;
+  }
+
+  let html = "";
+  COLUMNS.forEach(col => {
+    let value = item[col] ?? "";
+    if (["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"].includes(col)) {
+      value = formatDate(value);
+    }
+    html += `<div class='row'><span class='label'>${col}:</span> ${value}</div>`;
+  });
+  document.getElementById("info-box").innerHTML = html;
+  document.getElementById("result").innerHTML = code;
+}
+
+// Hàm gọi khi nhấn nút Tìm
+function searchCode() {
+  const code = document.getElementById("manual-code").value.trim();
+  if (code) showInfo(code);
+}
+
+// Bắt đầu quét QR
 async function startScanner() {
   const cameras = await Html5Qrcode.getCameras();
   let backCam = cameras.find(cam =>
@@ -79,28 +122,9 @@ async function startScanner() {
   scanner.start(
     cameraId,
     { fps: 10, qrbox: 250 },
-    async (decodedText) => {
-      document.getElementById("result").innerHTML = decodedText;
-
-      const rows = await loadCSV();
-      // 🔍 Tra theo cột Code
-      let item = rows.find(r => r.Code === decodedText);
-
-      if (!item) {
-        document.getElementById("info-box").innerHTML = "<b>Không tìm thấy thiết bị!</b>";
-        return;
-      }
-
-      let html = "";
-      COLUMNS.forEach(col => {
-        let value = item[col] ?? "";
-        if (["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"].includes(col)) {
-          value = formatDate(value);
-        }
-        html += `<div class='row'><span class='label'>${col}:</span> ${value}</div>`;
-      });
-
-      document.getElementById("info-box").innerHTML = html;
+    decodedText => {
+      showInfo(decodedText);
+      scanner.stop();
     }
   );
 }
@@ -110,6 +134,3 @@ startScanner();
 
 </body>
 </html>
-
-
-
