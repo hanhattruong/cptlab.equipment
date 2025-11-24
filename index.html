@@ -2,270 +2,75 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>QR → Thông Tin Thiết Bị</title>
-
-  <!-- Thư viện quét QR -->
+  <title>QR Scan → EquipmentList</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
-  <!-- Thư viện đọc CSV -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 15px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    h2 {
-      margin-top: 0;
-    }
-    #reader {
-      width: 100%;
-      max-width: 350px;
-      margin: 10px auto 20px auto;
-    }
-    #info {
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      background: #fafafa;
-    }
-    .label {
-      font-weight: bold;
-    }
-    .not-found {
-      color: red;
-      font-weight: bold;
-    }
-    .manual {
-      margin: 10px 0 15px 0;
-    }
-    .manual input {
-      padding: 6px;
-      width: 180px;
-      font-size: 14px;
-    }
-    .manual button {
-      padding: 6px 10px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    img.equip-picture {
-      max-width: 100%;
-      height: auto;
-      margin: 5px 0 10px 0;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    .small {
-      font-size: 11px;
-      color: #666;
-      margin-top: 6px;
-    }
+    body { font-family: Arial; padding: 20px; }
+    #reader { width: 300px; margin-bottom: 20px; }
+    #info { margin-top: 20px; font-size: 14px; line-height: 1.5; }
+    table { border-collapse: collapse; width: 100%; max-width: 800px; }
+    th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
+    th { background-color: #f2f2f2; }
   </style>
 </head>
 <body>
+  <h2>Quét QR Code → Thông tin thiết bị (EquipmentList)</h2>
+  <div id="reader"></div>
+  <div id="info"></div>
 
-<h2>Quét QR → Thông Tin Thiết Bị</h2>
+  <script>
+    const csvUrl = "https://ttigroup-my.sharepoint.com/personal/nhattruong_ha_ttigroup_com_vn/Documents/Apps/CPT%20VN%20Lab%20Equipment%20Team%20Work%20Summary_.xlsx?web=1"; // Thay bằng link CSV trực tiếp từ SharePoint
 
-<div class="manual">
-  <span class="label">Nhập Code (nếu cần):</span>
-  <input id="codeInput" type="text" placeholder="VD: LAB-FAI-0001">
-  <button onclick="searchByCode()">Tìm</button>
-</div>
+    let equipmentData = [];
 
-<div id="reader"></div>
-
-<div id="info">Đang tải dữ liệu thiết bị từ SharePoint...</div>
-<div class="small">
-  Dữ liệu tự làm mới mỗi 1 phút. Nếu file Excel thay đổi, chỉ cần chờ hoặc reload trang.
-</div>
-
-<script>
-  // 🔗 Link CSV trên SharePoint của m
-  const CSV_URL =
-    "https://ttigroup-my.sharepoint.com/personal/nhattruong_ha_ttigroup_com_vn/Documents/Apps/CPT%20VN%20Lab%20Equipment%20Team%20Work%20Summary_.csv?web=1";
-
-  // Các cột ngày
-  const dateFields = [
-    "Purchase_Date",
-    "Calibration_Date",
-    "Due_Date",
-    "PM_Date",
-    "Next_PM"
-  ];
-
-  let database = [];
-  let lastLoadedTime = null;
-
-  // Format ngày DD/MM/YYYY
-  function formatDate(d) {
-    if (!d || String(d).trim() === "") return "";
-    const date = new Date(d);
-    if (isNaN(date)) return d; // Không parse được thì trả nguyên
-    return date.toLocaleDateString("vi-VN");
-  }
-
-  // Load CSV từ SharePoint
-  function loadData(showMessage = true) {
-    if (showMessage) {
-      document.getElementById("info").innerHTML = "Đang tải dữ liệu thiết bị từ SharePoint...";
-    }
-
-    Papa.parse(CSV_URL, {
+    // Load CSV từ SharePoint
+    Papa.parse(csvUrl, {
       download: true,
       header: true,
-      skipEmptyLines: true,
       complete: function(results) {
-        database = results.data;
-        lastLoadedTime = new Date();
-        document.getElementById("info").innerHTML =
-          "Dữ liệu đã tải: " + database.length + " thiết bị.<br>Quét QR hoặc nhập Code để xem chi tiết.";
-        console.log("Loaded data rows:", database.length);
-      },
-      error: function(err) {
-        document.getElementById("info").innerHTML =
-          "<span class='not-found'>Lỗi tải dữ liệu từ CSV: " + err + "</span>";
-        console.error("CSV load error:", err);
+        equipmentData = results.data;
       }
     });
-  }
 
-  // Render thông tin 1 thiết bị ra HTML
-  function renderItem(item) {
-    if (!item) {
-      return "<span class='not-found'>Không tìm thấy thiết bị!</span>";
+    // Chuyển chuỗi ngày sang dd/mm/yyyy
+    function formatDate(dateStr) {
+      if(!dateStr) return "";
+      const date = new Date(dateStr);
+      if(isNaN(date)) return dateStr;
+      const day = String(date.getDate()).padStart(2,'0');
+      const month = String(date.getMonth()+1).padStart(2,'0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     }
 
-    let html = "<h3>Thông Tin Thiết Bị</h3>";
-
-    // Ưu tiên hiển thị theo nhóm cho dễ đọc
-    const order = [
-      "Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
-      "LAB_Description","FA_Description","Specification",
-      "Control_NO","Assets_NO",
-      "Responsible_By","Team","Location",
-      "Picture",
-      "Function","Week Control",
-      "Purchase_Date","Supplier","Received_By","PO_No",
-      "Calibration_Date","Due_Date","PM_Date","Next_PM",
-      "Status","Remark"
-    ];
-
-    const shownKeys = new Set();
-
-    order.forEach(key => {
-      if (!(key in item)) return;
-
-      let value = item[key];
-
-      if (dateFields.includes(key)) {
-        value = formatDate(value);
-      }
-
-      if (key === "Picture" && value) {
-        // Nếu Picture là link → hiện ảnh
-        html += `<div class="label">Picture:</div>`;
-        html += `<img class="equip-picture" src="${value}" alt="Picture">`;
-        html += `<br>`;
+    function showInfo(id) {
+      const item = equipmentData.find(row => row.Code === id || row.No === id);
+      const infoDiv = document.getElementById("info");
+      if(item){
+        let html = "<table>";
+        for(const key in item){
+          let value = item[key];
+          // Format các cột ngày
+          if(["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"].includes(key)){
+            value = formatDate(value);
+          }
+          html += `<tr><th>${key}</th><td>${value}</td></tr>`;
+        }
+        html += "</table>";
+        infoDiv.innerHTML = html;
       } else {
-        html += `<span class="label">${key}:</span> ${value || ""}<br>`;
+        infoDiv.innerHTML = "<b>Không tìm thấy thiết bị!</b>";
       }
-
-      shownKeys.add(key);
-    });
-
-    // Nếu còn cột nào không nằm trong order thì in nốt
-    for (let key in item) {
-      if (shownKeys.has(key)) continue;
-      let value = item[key];
-      if (dateFields.includes(key)) {
-        value = formatDate(value);
-      }
-      html += `<span class="label">${key}:</span> ${value || ""}<br>`;
     }
 
-    if (lastLoadedTime) {
-      html += `<br><span class="small">Dữ liệu cập nhật lúc: ${lastLoadedTime.toLocaleTimeString("vi-VN")}</span>`;
+    function onScanSuccess(decodedText, decodedResult) {
+      showInfo(decodedText.trim());
     }
 
-    return html;
-  }
-
-  // Tìm theo Code
-  function findByCode(code) {
-    if (!code) return null;
-    const target = String(code).trim().toUpperCase();
-    // cột Code trong CSV
-    const item = database.find(row =>
-      row.Code && String(row.Code).trim().toUpperCase() === target
-    );
-    return item || null;
-  }
-
-  // Xử lý khi quét QR thành công
-  function onScanSuccess(qrMessage) {
-    const code = String(qrMessage).trim();
-    console.log("QR scanned:", code);
-
-    const item = findByCode(code);
-    const infoDiv = document.getElementById("info");
-
-    if (!item) {
-      infoDiv.innerHTML =
-        `<div><span class="label">Code quét được:</span> ${code}</div>` +
-        `<div class='not-found'>Không tìm thấy thiết bị có Code này trong file!</div>`;
-    } else {
-      infoDiv.innerHTML = renderItem(item);
-    }
-
-    // Đồng thời fill vào ô nhập tay
-    document.getElementById("codeInput").value = code;
-  }
-
-  // Cho phép user nhập tay Code rồi tìm
-  function searchByCode() {
-    const code = document.getElementById("codeInput").value;
-    const item = findByCode(code);
-    const infoDiv = document.getElementById("info");
-
-    if (!item) {
-      infoDiv.innerHTML =
-        `<div><span class="label">Code:</span> ${code}</div>` +
-        `<div class='not-found'>Không tìm thấy thiết bị!</div>`;
-    } else {
-      infoDiv.innerHTML = renderItem(item);
-    }
-  }
-
-  // Khởi động quét QR
-  function startScanner() {
-    const config = {
-      fps: 10,
-      qrbox: 250
-    };
-    const scanner = new Html5QrcodeScanner("reader", config);
-    scanner.render(onScanSuccess);
-  }
-
-  // Auto reload data mỗi 1 phút
-  function setupAutoRefresh() {
-    // 60000 ms = 1 phút, muốn lâu hơn thì đổi số này
-    setInterval(() => {
-      console.log("Auto refresh data from CSV...");
-      loadData(false); // false = không ghi đè message nếu đang xem chi tiết
-    }, 60000);
-  }
-
-  // Khi trang load xong
-  window.addEventListener("load", function() {
-    loadData(true);
-    startScanner();
-    setupAutoRefresh();
-  });
-</script>
-
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
 </body>
 </html>
-
