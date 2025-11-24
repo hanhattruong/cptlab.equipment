@@ -2,56 +2,89 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Quét QR → Tra cứu thiết bị Excel Online</title>
+  <title>CPT LAB Equipment Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Thư viện quét QR -->
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- Thư viện đọc CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
   <style>
-    #reader { width: 300px; margin-bottom: 20px; }
-    #result { white-space: pre-wrap; background: #f0f0f0; padding: 10px; border: 1px solid #ccc; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      max-width: 500px;
+      margin: auto;
+    }
+    #reader {
+      width: 100%;
+      margin: 10px 0;
+    }
+    #info {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    .label {
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <h3>Quét QR để lấy thông tin thiết bị</h3>
+  <h2>CPT LAB Equipment Scanner</h2>
+
   <div id="reader"></div>
-  <div id="result">Kết quả sẽ hiển thị ở đây...</div>
+  <div id="info">Quét QR hoặc mở link với ?code=LAB-FAI-0001 để xem thông tin thiết bị.</div>
 
   <script>
-    async function onScanSuccess(decodedText) {
-      // decodedText chính là ID thiết bị, ví dụ: "LAB-FAI-0001"
-      let deviceID = decodedText.trim();
-      document.getElementById("result").textContent = "QR ID: " + deviceID;
+    // Link CSV từ GitHub
+    const csvUrl = "https://raw.githubusercontent.com/hanhattruong/cptlab.equipment/main/EquipmentList.csv";
 
-      try {
-        const apiUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/YOUR_PATH/CPT VN Lab Equipment Team Work Summary_.xlsx:/workbook/tables('EquipmentList')/rows?$filter=ID eq '${deviceID}'`;
+    let equipmentData = [];
 
-        const response = await fetch(apiUrl, {
-          headers: {
-            "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-          }
-        });
+    // Load CSV
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        equipmentData = results.data;
 
-        if (!response.ok) throw new Error(`Lỗi API: ${response.status} ${response.statusText}`);
+        // Nếu URL có ?code=xxx thì hiển thị luôn
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get("code");
+        if (code) showEquipment(code);
+      }
+    });
 
-        const data = await response.json();
+    // Hàm hiển thị thông tin thiết bị
+    function showEquipment(code) {
+      const item = equipmentData.find(row => row.Code === code);
+      const infoDiv = document.getElementById("info");
 
-        if(data.value && data.value.length > 0){
-          document.getElementById("result").innerHTML =
-            "<strong>Thông tin thiết bị:</strong><br>" +
-            JSON.stringify(data.value[0].values, null, 2);
-        } else {
-          document.getElementById("result").textContent = "Không tìm thấy thiết bị với ID: " + deviceID;
-        }
-
-      } catch (err) {
-        document.getElementById("result").textContent = "Lỗi: " + err.message;
+      if (item) {
+        infoDiv.innerHTML = `
+          <div><span class="label">Code:</span> ${item.Code}</div>
+          <div><span class="label">Model:</span> ${item.Model_NO}</div>
+          <div><span class="label">Serial:</span> ${item.Serial_No}</div>
+          <div><span class="label">Location:</span> ${item.Location}</div>
+          <div><span class="label">Description:</span> ${item.LAB_Description}</div>
+        `;
+      } else {
+        infoDiv.innerHTML = "Không tìm thấy thiết bị!";
       }
     }
 
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader",
-      { fps: 10, qrbox: 200 },
-      false
-    );
+    // Quét QR
+    function onScanSuccess(decodedText, decodedResult) {
+      showEquipment(decodedText);
+    }
 
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 }
+    );
     html5QrcodeScanner.render(onScanSuccess);
   </script>
 </body>
