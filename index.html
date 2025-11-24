@@ -10,35 +10,24 @@
   </style>
 </head>
 <body>
-  <h2>Equipment/Fixture Information</h2>
+  <h2>Detail Information</h2>
   <div id="info">Loading Data...</div>
 
   <script>
-    const accessToken = "YOUR_ACCESS_TOKEN_HERE";
-    const driveId = "YOUR_DRIVE_ID";
-    const itemId = "YOUR_ITEM_ID";
+    // ===== Thay các giá trị =====
+    const accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6Imc3eHV3WlhLUHBKWkVpUUtkWFpOOTNfNHNhQ1JjcmxkdXNuRGlvQjltTE0iLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84YjhjYzZjZi0wZWFhLTRiNjQtOThlNC02ZDQ2NzJjNDQ5MzAvIiwiaWF0IjoxNzYzOTQ5NjgyLCJuYmYiOjE3NjM5NDk2ODIsImV4cCI6MTc2NDAzNjM4MiwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsicDEiLCJjMSIsImMyIl0sImFpbyI6IkFYUUFpLzhhQUFBQXdKa0FaSWIwYlFBbkYyN2w3aXRVeWpKYkUrZjNXOVRnNVFOdzFTbC9XWXFjU2Y5L3ZiUjd1dldpVkU4RkowMEtXTldxM0wvczNMdWdvWEN4UitoaHhNdHRnOHBoYnI0a3hJRmsyc0FKOUUrQnc2ODVGTjNPRzNESVhmYXZpV0swODJyVWVqWStjVFdIclIwWlU3Wk54dz09IiwiYW1yIjpbInB3ZCIsInJzYSIsIm1mYSJdLCJhcHBfZGlzcGxheW5hbWUiOiJHcmFwaCBFeHBsb3JlciIsImFwcGlkIjoiZGU4YmM4YjUtZDlmOS00OGIxLWE4YWQtYjc0OGRhNzI1MDY0IiwiYXBwaWRhY3IiOiIwIiwiZGV2aWNlaWQiOiI0ODNlNzIxMC1hMzlmLTQyMjQtYjAzMS1mMGE1YmMxOTg2ZjAiLCJmYW1pbHlfbmFtZSI6IkhhIiwiZ2l2ZW5fbmFtZSI6Ik5oYXQgVHJ1b25nIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiNDIuMTE2LjUxLjQwIiwibmFtZSI6IlNhdmkgSGEgTmhhdCBUcnVvbmcgKFZOLlJZT0JJLUxBQikiLCJvaWQiOiJkNDFiZmFkZi05ZDhmLTRjZDItOTUwYy1iYzQ3ZTQ3NjFiODUiLCJvbnByZW1fc2lkIjoiUy0xLTUtMjEtNDk0MDg3MDU1LTM3OTEwNDkyNy0xNTY0NjA5MTY2LTMzOTYzMjkiLCJwbGF0ZiI6IjMiLCJwdWlkIjoiMTAwMzIwMDI5MzRDQUMwMyIsInJoIjoiMS5BWElBejhhTWk2b09aRXVZNUcxR2NzUkpNQU1BQUFBQUFBQUF3QUFBQUFBQUFBQ0dBYUJ5QUEuIiwic2NwIjoiQ2FsZW5kYXJzLlJlYWRXcml0ZSBDb250YWN0cy5SZWFkV3JpdGUgRGV2aWNlLlJlYWQuQWxsIERldmljZU1hbmFnZW1lbnRDb25maWd1cmF0aW9uLlJlYWQuQWxsIERpcmVjdG9yeS5SZWFkLkFsbCBEaXJlY3RvcnkuUmVhZFdyaXRlLkFsbCBGaWxlcy5SZWFkV3JpdGUuQWxsIE1haWwuUmVhZFdyaXRlIE5vdGVzLlJlYWRXcml0ZS5BbGwgb3BlbmlkIFBlb3BsZS5SZWFkIHByb2ZpbGUgU2l0ZXMuUmVhZFdyaXRlLkFsbCBUYXNrcy5SZWFkV3JpdGUgVXNlci5SZWFkIFVzZXIuUmVhZEJhc2ljLkFsbCBVc2VyLlJlYWRXcml0ZSBlbWFpbCIsInNpZCI6IjAwOGQwNWE5LTg4ODItM2NkOC1hZDU5LTc4N2RiOTI0ODQ1MCIsInNpZ25pbl9zdGF0ZSI6WyJkdmNfbW5nZCIsImR2Y19jbXAiLCJkdmNfZG1qZCIsImlua25vd25udHdrIiwia21zaSJdLCJzdWIiOiJBejd2cHg5RVgwTV9YTHo2Q094cVk5QnJoTWc2REVIaVA2YXRFeDdmODBJIiwidGVuYW50X3JlZ2lvbl9zY29wZSI6IkFTIiwidGlkIjoiOGI4Y2M2Y2YtMGVhYS00YjY0LTk4ZTQtNmQ0NjcyYzQ0OTMwIiwidW5pcXVlX25hbWUiOiJOaGF0VHJ1b25nLkhhQHR0aWdyb3VwLmNvbS52biIsInVwbiI6Ik5oYXRUcnVvbmcuSGFAdHRpZ3JvdXAuY29tLnZuIiwidXRpIjoiSGs4a29QTzNCRUNvNnhtWjdUZ1ZBQSIsInZlciI6IjEuMCIsIndpZHMiOlsiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19hY2QiOjE0NzQ2NjQwNzMsInhtc19hY3RfZmN0IjoiMyA3IiwieG1zX2NjIjpbIkNQMSJdLCJ4bXNfZnRkIjoiYk1mU2VZVHh0blA0b3Fqb1BxWmFVTVpjcFpZZkxodVRkY2Z4ZldDTzUxZ0JhbUZ3WVc1bFlYTjBMV1J6YlhNIiwieG1zX2lkcmVsIjoiMjIgMSIsInhtc19zc20iOiIxIiwieG1zX3N0Ijp7InN1YiI6InRabHp2SGhpdGtaMjJwVlRCdGRWc2I2T0NRQmlyYU9qOUs0MFBnYktUd3MifSwieG1zX3N1Yl9mY3QiOiIzIDYiLCJ4bXNfdGNkdCI6MTQzNzExOTI3MSwieG1zX3RudF9mY3QiOiIzIDYifQ.aX02aJm7nR9pLp2ubCCaBTbCABwtfPGBbQgGIX4mzUmPixBKkG0Ltat00q6NZotT-O_3mHmOV2DvGE9wqfyIDcIUqbQdB9d_KWrY2uWDkw_W0AnmTLvPJp2fRMgOV3LYegI5d55Qhyt_i_8yZYoH8oAwXUwwprSBHeMppmwXYRIDgHU4rYL-EoHo9H8R8MEDFC8uUAKuPRLLUnai6wdxiqc_M4CQ15Hrvux6fFw1c7fS2KGub0TagoSGrhZ6ld9uXeFnAJNSznZes_5hxbgNiY9da-I3vU68hd-Lqp83O7T6hXGB74VAPmIDykL2b3suMiBm623CRvDXS8guH1wNUQ"; // token tạm thời
+    const driveId = "b!1FxBlWj8ekuwPxAKTD-bpQEmUDASyytPjgSNLCERr-cX4itvhM5iRaNcje-tpPux";
+    const itemId = "01CPEFVA5SOSU4IOCPIFCZYG74B2GNPWPV";
     const tableName = "EquipmentList";
-
     const colNames = ["Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
                       "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
                       "Responsible_By","Team","Location","Picture","Function","Week Control",
                       "Purchase_Date","Supplier","Received_By","PO_No","Calibration_Date",
                       "Due_Date","PM_Date","Next_PM","Status","Remark"];
 
-    const dateCols = ["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"];
-
+    // Lấy code thiết bị từ URL
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-
-    function formatDate(val){
-      if(!val) return "";
-      const d = new Date(val);
-      if(isNaN(d.getTime())) return val; // nếu không phải ngày thì giữ nguyên
-      const dd = String(d.getDate()).padStart(2,'0');
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const yyyy = d.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
-    }
 
     if(!code){
       document.getElementById("info").innerText = "There is no code of Equipment on URL!";
@@ -48,31 +37,24 @@
       })
       .then(res => res.json())
       .then(data => {
-        if(!data.value || !Array.isArray(data.value)){
-          document.getElementById("info").innerText = "No data returned!";
-          return;
-        }
-
-        const row = data.value.find(r => r.values && r.values[0][0] === code);
-        if(row && row.values && row.values[0]){
+        const row = data.value.find(r => r.values[0][0] === code);
+        if(row){
           let html = "";
           row.values[0].forEach((val,i) => {
-            val = val ?? ""; // nếu null hoặc undefined → ""
-            if(dateCols.includes(colNames[i])){
-              val = formatDate(val);
-            }
             html += `<b>${colNames[i]}:</b> ${val}<br>`;
           });
           document.getElementById("info").innerHTML = html;
         } else {
-          document.getElementById("info").innerText = "Cannot Find the Equipment!";
+          document.getElementById("info").innerText = "Cannot Fount the Equipment!";
         }
       })
       .catch(err => {
         console.error(err);
-        document.getElementById("info").innerText = "Error When Getting Data!";
+        document.getElementById("info").innerText = "Error When Get Data!";
       });
     }
   </script>
 </body>
 </html>
+
+
