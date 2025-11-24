@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <h2>Thông tin thiết bị</h2>
+  <h2>Detail Information</h2>
   <div id="info">Đang tải dữ liệu...</div>
 
   <script>
@@ -30,7 +30,7 @@
     const code = params.get("code");
 
     if(!code){
-      document.getElementById("info").innerText = "Chưa có mã thiết bị trong URL!";
+      document.getElementById("info").innerText = "There is no code of Equipment on URL!";
     } else {
       fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableName}/rows`, {
         headers: { "Authorization": `Bearer ${accessToken}` }
@@ -45,16 +45,17 @@
           });
           document.getElementById("info").innerHTML = html;
         } else {
-          document.getElementById("info").innerText = "Không tìm thấy thiết bị!";
+          document.getElementById("info").innerText = "Cannot Fount the Equipment!";
         }
       })
       .catch(err => {
         console.error(err);
-        document.getElementById("info").innerText = "Lỗi khi lấy dữ liệu!";
+        document.getElementById("info").innerText = "Error When Get Data!";
       });
     }
   </script>
 </body>
 </html>
+
 
 
