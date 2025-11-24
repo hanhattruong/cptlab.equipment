@@ -14,10 +14,9 @@
   <div id="info">Loading Data...</div>
 
   <script>
-    // ===== Thay các giá trị =====
-    const accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6Imc3eHV3WlhLUHBKWkVpUUtkWFpOOTNfNHNhQ1JjcmxkdXNuRGlvQjltTE0iLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84YjhjYzZjZi0wZWFhLTRiNjQtOThlNC02ZDQ2NzJjNDQ5MzAvIiwiaWF0IjoxNzYzOTQ5NjgyLCJuYmYiOjE3NjM5NDk2ODIsImV4cCI6MTc2NDAzNjM4MiwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsicDEiLCJjMSIsImMyIl0sImFpbyI6IkFYUUFpLzhhQUFBQXdKa0FaSWIwYlFBbkYyN2w3aXRVeWpKYkUrZjNXOVRnNVFOdzFTbC9XWXFjU2Y5L3ZiUjd1dldpVkU4RkowMEtXTldxM0wvczNMdWdvWEN4UitoaHhNdHRnOHBoYnI0a3hJRmsyc0FKOUUrQnc2ODVGTjNPRzNESVhmYXZpV0swODJyVWVqWStjVFdIclIwWlU3Wk54dz09...";
-    const driveId = "b!1FxBlWj8ekuwPxAKTD-bpQEmUDASyytPjgSNLCERr-cX4itvhM5iRaNcje-tpPux";
-    const itemId = "01CPEFVA5SOSU4IOCPIFCZYG74B2GNPWPV";
+    const accessToken = "YOUR_ACCESS_TOKEN_HERE";
+    const driveId = "YOUR_DRIVE_ID";
+    const itemId = "YOUR_ITEM_ID";
     const tableName = "EquipmentList";
 
     const colNames = ["Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
@@ -28,14 +27,13 @@
 
     const dateCols = ["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"];
 
-    // Lấy code thiết bị từ URL
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
 
     function formatDate(val){
       if(!val) return "";
       const d = new Date(val);
-      if(isNaN(d)) return val; // nếu không phải ngày thì giữ nguyên
+      if(isNaN(d.getTime())) return val; // nếu không phải ngày thì giữ nguyên
       const dd = String(d.getDate()).padStart(2,'0');
       const mm = String(d.getMonth()+1).padStart(2,'0');
       const yyyy = d.getFullYear();
@@ -50,10 +48,16 @@
       })
       .then(res => res.json())
       .then(data => {
-        const row = data.value.find(r => r.values[0][0] === code);
-        if(row){
+        if(!data.value || !Array.isArray(data.value)){
+          document.getElementById("info").innerText = "No data returned!";
+          return;
+        }
+
+        const row = data.value.find(r => r.values && r.values[0][0] === code);
+        if(row && row.values && row.values[0]){
           let html = "";
           row.values[0].forEach((val,i) => {
+            val = val ?? ""; // nếu null hoặc undefined → ""
             if(dateCols.includes(colNames[i])){
               val = formatDate(val);
             }
@@ -61,12 +65,12 @@
           });
           document.getElementById("info").innerHTML = html;
         } else {
-          document.getElementById("info").innerText = "Cannot Found the Equipment!";
+          document.getElementById("info").innerText = "Cannot Find the Equipment!";
         }
       })
       .catch(err => {
         console.error(err);
-        document.getElementById("info").innerText = "Error When Get Data!";
+        document.getElementById("info").innerText = "Error When Getting Data!";
       });
     }
   </script>
