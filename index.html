@@ -1,76 +1,124 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>QR Scan → EquipmentList</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    #reader { width: 300px; margin-bottom: 20px; }
-    #info { margin-top: 20px; font-size: 14px; line-height: 1.5; }
-    table { border-collapse: collapse; width: 100%; max-width: 800px; }
-    th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
-    th { background-color: #f2f2f2; }
-  </style>
+<meta charset="UTF-8">
+<title>QR / Link → Equipment Info</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+body { font-family: Arial; padding: 20px; }
+#reader { width: 300px; margin-bottom: 20px; }
+table { border-collapse: collapse; margin-top: 10px; }
+td, th { border: 1px solid #ccc; padding: 5px 10px; text-align: left; }
+th { background-color: #f0f0f0; }
+</style>
 </head>
 <body>
-  <h2>Quét QR Code → Thông tin thiết bị (EquipmentList)</h2>
-  <div id="reader"></div>
-  <div id="info"></div>
 
-  <script>
-    const csvUrl = "https://ttigroup-my.sharepoint.com/personal/nhattruong_ha_ttigroup_com_vn/Documents/Apps/CPT%20VN%20Lab%20Equipment%20Team%20Work%20Summary_.xlsx?web=1"; // Thay bằng link CSV trực tiếp từ SharePoint
+<h2>Equipment Info</h2>
+<div id="reader"></div>
+<div id="info">Scan a QR code or open link with ?id=LAB-FAI-0001</div>
 
-    let equipmentData = [];
+<script>
+// ====== CONFIG ======
+let token = 'eyJ0eXAiOiJKV1QiLCJub25jZSI6Imc3eHV3WlhLUHBKWkVpUUtkWFpOOTNfNHNhQ1JjcmxkdXNuRGlvQjltTE0iLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84YjhjYzZjZi0wZWFhLTRiNjQtOThlNC02ZDQ2NzJjNDQ5MzAvIiwiaWF0IjoxNzYzOTQ5NjgyLCJuYmYiOjE3NjM5NDk2ODIsImV4cCI6MTc2NDAzNjM4MiwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsicDEiLCJjMSIsImMyIl0sImFpbyI6IkFYUUFpLzhhQUFBQXdKa0FaSWIwYlFBbkYyN2w3aXRVeWpKYkUrZjNXOVRnNVFOdzFTbC9XWXFjU2Y5L3ZiUjd1dldpVkU4RkowMEtXTldxM0wvczNMdWdvWEN4UitoaHhNdHRnOHBoYnI0a3hJRmsyc0FKOUUrQnc2ODVGTjNPRzNESVhmYXZpV0swODJyVWVqWStjVFdIclIwWlU3Wk54dz09IiwiYW1yIjpbInB3ZCIsInJzYSIsIm1mYSJdLCJhcHBfZGlzcGxheW5hbWUiOiJHcmFwaCBFeHBsb3JlciIsImFwcGlkIjoiZGU4YmM4YjUtZDlmOS00OGIxLWE4YWQtYjc0OGRhNzI1MDY0IiwiYXBwaWRhY3IiOiIwIiwiZGV2aWNlaWQiOiI0ODNlNzIxMC1hMzlmLTQyMjQtYjAzMS1mMGE1YmMxOTg2ZjAiLCJmYW1pbHlfbmFtZSI6IkhhIiwiZ2l2ZW5fbmFtZSI6Ik5oYXQgVHJ1b25nIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiNDIuMTE2LjUxLjQwIiwibmFtZSI6IlNhdmkgSGEgTmhhdCBUcnVvbmcgKFZOLlJZT0JJLUxBQikiLCJvaWQiOiJkNDFiZmFkZi05ZDhmLTRjZDItOTUwYy1iYzQ3ZTQ3NjFiODUiLCJvbnByZW1fc2lkIjoiUy0xLTUtMjEtNDk0MDg3MDU1LTM3OTEwNDkyNy0xNTY0NjA5MTY2LTMzOTYzMjkiLCJwbGF0ZiI6IjMiLCJwdWlkIjoiMTAwMzIwMDI5MzRDQUMwMyIsInJoIjoiMS5BWElBejhhTWk2b09aRXVZNUcxR2NzUkpNQU1BQUFBQUFBQUF3QUFBQUFBQUFBQ0dBYUJ5QUEuIiwic2NwIjoiQ2FsZW5kYXJzLlJlYWRXcml0ZSBDb250YWN0cy5SZWFkV3JpdGUgRGV2aWNlLlJlYWQuQWxsIERldmljZU1hbmFnZW1lbnRDb25maWd1cmF0aW9uLlJlYWQuQWxsIERpcmVjdG9yeS5SZWFkLkFsbCBEaXJlY3RvcnkuUmVhZFdyaXRlLkFsbCBGaWxlcy5SZWFkV3JpdGUuQWxsIE1haWwuUmVhZFdyaXRlIE5vdGVzLlJlYWRXcml0ZS5BbGwgb3BlbmlkIFBlb3BsZS5SZWFkIHByb2ZpbGUgU2l0ZXMuUmVhZFdyaXRlLkFsbCBUYXNrcy5SZWFkV3JpdGUgVXNlci5SZWFkIFVzZXIuUmVhZEJhc2ljLkFsbCBVc2VyLlJlYWRXcml0ZSBlbWFpbCIsInNpZCI6IjAwOGQwNWE5LTg4ODItM2NkOC1hZDU5LTc4N2RiOTI0ODQ1MCIsInNpZ25pbl9zdGF0ZSI6WyJkdmNfbW5nZCIsImR2Y19jbXAiLCJkdmNfZG1qZCIsImlua25vd25udHdrIiwia21zaSJdLCJzdWIiOiJBejd2cHg5RVgwTV9YTHo2Q094cVk5QnJoTWc2REVIaVA2YXRFeDdmODBJIiwidGVuYW50X3JlZ2lvbl9zY29wZSI6IkFTIiwidGlkIjoiOGI4Y2M2Y2YtMGVhYS00YjY0LTk4ZTQtNmQ0NjcyYzQ0OTMwIiwidW5pcXVlX25hbWUiOiJOaGF0VHJ1b25nLkhhQHR0aWdyb3VwLmNvbS52biIsInVwbiI6Ik5oYXRUcnVvbmcuSGFAdHRpZ3JvdXAuY29tLnZuIiwidXRpIjoiSGs4a29QTzNCRUNvNnhtWjdUZ1ZBQSIsInZlciI6IjEuMCIsIndpZHMiOlsiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19hY2QiOjE0NzQ2NjQwNzMsInhtc19hY3RfZmN0IjoiMyA3IiwieG1zX2NjIjpbIkNQMSJdLCJ4bXNfZnRkIjoiYk1mU2VZVHh0blA0b3Fqb1BxWmFVTVpjcFpZZkxodVRkY2Z4ZldDTzUxZ0JhbUZ3WVc1bFlYTjBMV1J6YlhNIiwieG1zX2lkcmVsIjoiMjIgMSIsInhtc19zc20iOiIxIiwieG1zX3N0Ijp7InN1YiI6InRabHp2SGhpdGtaMjJwVlRCdGRWc2I2T0NRQmlyYU9qOUs0MFBnYktUd3MifSwieG1zX3N1Yl9mY3QiOiIzIDYiLCJ4bXNfdGNkdCI6MTQzNzExOTI3MSwieG1zX3RudF9mY3QiOiIzIDYifQ.aX02aJm7nR9pLp2ubCCaBTbCABwtfPGBbQgGIX4mzUmPixBKkG0Ltat00q6NZotT-O_3mHmOV2DvGE9wqfyIDcIUqbQdB9d_KWrY2uWDkw_W0AnmTLvPJp2fRMgOV3LYegI5d55Qhyt_i_8yZYoH8oAwXUwwprSBHeMppmwXYRIDgHU4rYL-EoHo9H8R8MEDFC8uUAKuPRLLUnai6wdxiqc_M4CQ15Hrvux6fFw1c7fS2KGub0TagoSGrhZ6ld9uXeFnAJNSznZes_5hxbgNiY9da-I3vU68hd-Lqp83O7T6hXGB74VAPmIDykL2b3suMiBm623CRvDXS8guH1wNUQ'; // <-- thay bằng token Microsoft Graph
+const filePath = '/Documents/Apps/CPT VN Lab Equipment Team Work Summary_.xlsx';
+const tableName = 'EquipmentList';
+const dateColumns = ['Purchase_Date','Calibration_Date','Due_Date','PM_Date','Next_PM'];
 
-    // Load CSV từ SharePoint
-    Papa.parse(csvUrl, {
-      download: true,
-      header: true,
-      complete: function(results) {
-        equipmentData = results.data;
-      }
-    });
+// ====== HELPER ======
+function formatDate(value){
+    if(!value) return '';
+    const d = new Date(value);
+    if(isNaN(d)) return value;
+    return d.getDate().toString().padStart(2,'0') + '/' +
+           (d.getMonth()+1).toString().padStart(2,'0') + '/' +
+           d.getFullYear();
+}
 
-    // Chuyển chuỗi ngày sang dd/mm/yyyy
-    function formatDate(dateStr) {
-      if(!dateStr) return "";
-      const date = new Date(dateStr);
-      if(isNaN(date)) return dateStr;
-      const day = String(date.getDate()).padStart(2,'0');
-      const month = String(date.getMonth()+1).padStart(2,'0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    }
+function getQueryParam(param){
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
 
-    function showInfo(id) {
-      const item = equipmentData.find(row => row.Code === id || row.No === id);
-      const infoDiv = document.getElementById("info");
-      if(item){
-        let html = "<table>";
-        for(const key in item){
-          let value = item[key];
-          // Format các cột ngày
-          if(["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"].includes(key)){
-            value = formatDate(value);
-          }
-          html += `<tr><th>${key}</th><td>${value}</td></tr>`;
+// ====== LOAD EQUIPMENT DATA ======
+let equipmentData = [];
+
+async function loadEquipmentData(){
+    try{
+        // Lấy header
+        const headerRes = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:${filePath}:/workbook/tables/${tableName}/headerRowRange`,{
+            headers: {'Authorization': `Bearer ${token}`}
+        });
+        const headerData = await headerRes.json();
+        const headers = headerData.values[0];
+
+        // Lấy rows
+        const rowsRes = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:${filePath}:/workbook/tables/${tableName}/rows`,{
+            headers: {'Authorization': `Bearer ${token}`}
+        });
+        const rowsData = await rowsRes.json();
+
+        // Map rows thành object
+        equipmentData = rowsData.value.map(r=>{
+            let obj = {};
+            r.values[0].forEach((v,i)=>{ obj[headers[i]] = v });
+            return obj;
+        });
+
+        console.log('Loaded equipment data:', equipmentData);
+
+        // Nếu mở link có ?id=..., hiển thị luôn
+        const idParam = getQueryParam('id');
+        if(idParam){
+            displayEquipment(idParam);
         }
-        html += "</table>";
-        infoDiv.innerHTML = html;
-      } else {
-        infoDiv.innerHTML = "<b>Không tìm thấy thiết bị!</b>";
-      }
-    }
 
-    function onScanSuccess(decodedText, decodedResult) {
-      showInfo(decodedText.trim());
+    } catch(err){
+        console.error('Error loading data:', err);
+        document.getElementById('info').innerHTML = 'Failed to load equipment data. Check token or file path.';
     }
+}
 
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader", { fps: 10, qrbox: 250 });
-    html5QrcodeScanner.render(onScanSuccess);
-  </script>
+// ====== DISPLAY EQUIPMENT ======
+function displayEquipment(code){
+    const record = equipmentData.find(e => e.Code === code);
+    if(record){
+        let html = '<table>';
+        for(const key in record){
+            let val = record[key];
+            if(dateColumns.includes(key)){
+                val = formatDate(val);
+            }
+            html += `<tr><th>${key}</th><td>${val}</td></tr>`;
+        }
+        html += '</table>';
+        document.getElementById('info').innerHTML = html;
+    } else {
+        document.getElementById('info').innerHTML = 'No equipment found for this code.';
+    }
+}
+
+// ====== QR SCANNER ======
+function onScanSuccess(decodedText, decodedResult){
+    console.log('QR code scanned:', decodedText);
+    // load data trước khi hiển thị
+    if(equipmentData.length === 0){
+        loadEquipmentData().then(()=> displayEquipment(decodedText));
+    } else {
+        displayEquipment(decodedText);
+    }
+}
+
+let html5QrcodeScanner = new Html5Qrcode("reader");
+html5QrcodeScanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    onScanSuccess
+);
+
+// ====== LOAD DATA ON PAGE LOAD ======
+loadEquipmentData();
+</script>
+
 </body>
 </html>
