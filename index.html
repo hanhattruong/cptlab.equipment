@@ -1,12 +1,14 @@
-<!DOCTYPE html>
-<html>
+
+DOCTYPE html>
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <title>CPT LAB Scanner</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    #info { margin-top: 20px; font-size: 14px; line-height: 1.5; }
+    body { font-family: Arial, Helvetica, sans-serif; padding: 20px; }
+    #info { margin-top: 20px; font-size: 14px; line-height: 1.6; }
     b { color: #333; }
+    .error { color: #b00020; }
   </style>
 </head>
 <body>
@@ -25,36 +27,110 @@
                       "Purchase_Date","Supplier","Received_By","PO_No","Calibration_Date",
                       "Due_Date","PM_Date","Next_PM","Status","Remark"];
 
+    // Các cột kiểu ngày cần format
+    const dateColumns = new Set([
+      "Purchase_Date", "Calibration_Date", "Due_Date", "PM_Date", "Next_PM"
+    ]);
+
+    // === Helpers ===
+
+    // Excel serial -> JS Date
+    function excelSerialToDate(serial) {
+      // Excel epoch offset: 25569 ngày từ 1899-12-30 đến 1970-01-01
+      const ms = (serial - 25569) * 86400000;
+      return new Date(ms); // dùng UTC milliseconds
+    }
+
+    // Parse giá trị ngày từ nhiều dạng: number (serial), ISO, yyyy-mm-dd, dd/mm/yyyy...
+    function parseDateValue(val) {
+      if (val == null || val === "") return null;
+
+      if (typeof val === "number") {
+        // Excel serial (có thể có phần thập phân là thời gian)
+        return excelSerialToDate(val);
+      }
+
+      if (typeof val === "string") {
+        // Thử ISO 8601 / yyyy-mm-dd
+        const iso = Date.parse(val);
+        if (!Number.isNaN(iso)) return new Date(iso);
+
+        // dd/MM/yyyy hoặc d/M/yyyy, với / hoặc -
+        const m = val.match(/^(\d{1,2})\/\-\/\-$/);
+        if (m) {
+          const d = parseInt(m[1], 10);
+          const mm = parseInt(m[2], 10) - 1;
+          let yyyy = parseInt(m[3], 10);
+          // xử lý năm 2 chữ số (nếu có)
+          if (yyyy < 100) {
+            yyyy += (yyyy >= 50 ? 1900 : 2000); // quy ước
+          }
+          const dt = new Date(yyyy, mm, d);
+          if (!Number.isNaN(dt.getTime())) return dt;
+        }
+      }
+
+      return null;
+    }
+
+    // Format Date -> chuỗi hiển thị
+    function formatDateForDisplay(date) {
+      // Hiển thị theo chuẩn Việt Nam: "dd/MM/yyyy"
+      return date.toLocaleDateString("vi-VN");
+      // Nếu muốn cố định: dd/MM/yyyy
+      // const d = String(date.getDate()).padStart(2, "0");
+      // const m = String(date.getMonth() + 1).padStart(2, "0");
+      // const y = date.getFullYear();
+      // return `${d}/${m}/${y}`;
+    }
+
+    // === Main ===
+
     // Lấy code thiết bị từ URL
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
 
-    if(!code){
-      document.getElementById("info").innerText = "There is no code of Equipment on URL!";
+    const infoEl = document.getElementById("info");
+
+    if (!code) {
+      infoEl.innerText = "There is no code of Equipment on URL!";
     } else {
       fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableName}/rows`, {
         headers: { "Authorization": `Bearer ${accessToken}` }
       })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
-        const row = data.value.find(r => r.values[0][0] === code);
-        if(row){
+        const row = data?.value?.find(r => r.values?.[0]?.[0] === code);
+        if (row) {
           let html = "";
-          row.values[0].forEach((val,i) => {
-            html += `<b>${colNames[i]}:</b> ${val}<br>`;
+          const values = row.values[0];
+
+          values.forEach((val, i) => {
+            const colName = colNames[i];
+
+            // Nếu là cột date thì parse + format
+            if (dateColumns.has(colName)) {
+              const parsed = parseDateValue(val);
+              if (parsed) {
+                val = formatDateForDisplay(parsed);
+              } // nếu không parse được thì giữ nguyên
+            }
+
+            html += `<b>${colName}:</b> ${val ?? ""}<br>`;
           });
-          document.getElementById("info").innerHTML = html;
+
+          infoEl.innerHTML = html;
         } else {
-          document.getElementById("info").innerText = "Cannot Fount the Equipment!";
+          infoEl.innerHTML = '<span class="error">Cannot Fount the Equipment!</span>';
         }
       })
       .catch(err => {
         console.error(err);
-        document.getElementById("info").innerText = "Error When Get Data!";
+        infoEl.innerHTML = '<span class="error">Error When Get Data!</span>';
       });
     }
   </script>
 </body>
-</html>
-
-
