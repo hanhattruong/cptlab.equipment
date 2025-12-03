@@ -13,8 +13,8 @@
   <h2>Detail Information</h2>
   <div id="info">Loading Data...</div>
 
+  <!-- ==== Thêm phần nhập dữ liệu sử dụng ==== -->
   <hr>
-
   <h3>Record Usage</h3>
   <label>Usage Date:</label>
   <input type="date" id="usageDate"><br><br>
@@ -24,20 +24,20 @@
   <div id="saveStatus"></div>
 
   <script>
-    // ===== Config =====
-    const accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6IkVjbFhMUndVYjFBMmJvYW9yaGNVN01KWU8wQTN1dFRCbkwwZkxzSDItX3MiLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9..."; // token
+    // ===== Thay các giá trị =====
+    const accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6IkVjbFhMUndVYjFBMmJvYW9yaGNVN01KWU8wQTN1dFRCbkwwZkxzSDItX3MiLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84YjhjYzZjZi0wZWFhLTRiNjQtOThlNC02ZDQ2NzJjNDQ5MzAvIiwiaWF0IjoxNzY0MjE0Njg0LCJuYmYiOjE3NjQyMTQ2ODQsImV4cCI6MTc2NDMwMTM4NCwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsicDEiLCJjMSIsImMyIl0sImFpbyI6IkFYUUFpLzhhQUFBQWM3aGc3Z3lXWFNqbkNxWFdCaEJobUpVTFR1dy9RYXZqMFVTd3NEOHhQYkhxOW5HVjVLOG9NM1VHcDh0TkIyMG12MmljZDNxWis3MDQ2RGlXZzhaaTNmL0p2dlhkT3JWWXNTeXBKMk9od0dtTkNLTHVlYmhvdVpQb290bjJGY3AvSURxNFAwT3ZuOVg1MXZ6QmRiR2RBQT09IiwiYW1yIjpbInB3ZCIsInJzYSIsIm1mYSJdLCJhcHBfZGlzcGxheW5hbWUiOiJHcmFwaCBFeHBsb3JlciIsImFwcGlkIjoiZGU4YmM4YjUtZDlmOS00OGIxLWE4YWQtYjc0OGRhNzI1MDY0IiwiYXBwaWRhY3IiOiIwIiwiZGV2aWNlaWQiOiI0ODNlNzIxMC1hMzlmLTQyMjQtYjAzMS1mMGE1YmMxOTg2ZjAiLCJmYW1pbHlfbmFtZSI6IkhhIiwiZ2l2ZW5fbmFtZSI6Ik5oYXQgVHJ1b25nIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiNDIuMTE2LjUxLjQwIiwibmFtZSI6IlNhdmkgSGEgTmhhdCBUcnVvbmcgKFZOLlJZT0JJLUxBQikiLCJvaWQiOiJkNDFiZmFkZi05ZDhmLTRjZDItOTUwYy1iYzQ3ZTQ3NjFiODUiLCJvbnByZW1fc2lkIjoiUy0xLTUtMjEtNDk0MDg3MDU1LTM3OTEwNDkyNy0xNTY0NjA5MTY2LTMzOTYzMjkiLCJwbGF0ZiI6IjMiLCJwdWlkIjoiMTAwMzIwMDI5MzRDQUMwMyIsInJoIjoiMS5BWElBejhhTWk2b09aRXVZNUcxR2NzUkpNQU1BQUFBQUFBQUF3QUFBQUFBQUFBQ0dBYUJ5QUEuIiwic2NwIjoiQ2FsZW5kYXJzLlJlYWRXcml0ZSBDb250YWN0cy5SZWFkV3JpdGUgRGV2aWNlLlJlYWQuQWxsIERldmljZU1hbmFnZW1lbnRDb25maWd1cmF0aW9uLlJlYWQuQWxsIERpcmVjdG9yeS5SZWFkLkFsbCBEaXJlY3RvcnkuUmVhZFdyaXRlLkFsbCBGaWxlcy5SZWFkV3JpdGUuQWxsIE1haWwuUmVhZFdyaXRlIE5vdGVzLlJlYWRXcml0ZS5BbGwgb3BlbmlkIFBlb3BsZS5SZWFkIHByb2ZpbGUgU2l0ZXMuUmVhZFdyaXRlLkFsbCBUYXNrcy5SZWFkV3JpdGUgVXNlci5SZWFkIFVzZXIuUmVhZEJhc2ljLkFsbCBVc2VyLlJlYWRXcml0ZSBlbWFpbCIsInNpZCI6IjAwOGQwNWE5LTg4ODItM2NkOC1hZDU5LTc4N2RiOTI0ODQ1MCIsInNpZ25pbl9zdGF0ZSI6WyJkdmNfbW5nZCIsImR2Y19jbXAiLCJkdmNfZG1qZCIsImlua25vd25udHdrIiwia21zaSJdLCJzdWIiOiJBejd2cHg5RVgwTV9YTHo2Q094cVk5QnJoTWc2REVIaVA2YXRFeDdmODBJIiwidGVuYW50X3JlZ2lvbl9zY29wZSI6IkFTIiwidGlkIjoiOGI4Y2M2Y2YtMGVhYS00YjY0LTk4ZTQtNmQ0NjcyYzQ0OTMwIiwidW5pcXVlX25hbWUiOiJOaGF0VHJ1b25nLkhhQHR0aWdyb3VwLmNvbS52biIsInVwbiI6Ik5oYXRUcnVvbmcuSGFAdHRpZ3JvdXAuY29tLnZuIiwidXRpIjoiT3pzVU9ENk9mMEs0QmliMEltZWpBQSIsInZlciI6IjEuMCIsIndpZHMiOlsiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19hY2QiOjE0NzQ2NjQwNzMsInhtc19hY3RfZmN0IjoiMyA3IiwieG1zX2NjIjpbIkNQMSJdLCJ4bXNfZnRkIjoiMTBIc005TU9SYk9tekhCbThaYnlmSTlDM2I1QW9vVzVWRV9XZ2diV3V2SUJhMjl5WldGemIzVjBhQzFrYzIxeiIsInhtc19pZHJlbCI6IjEgMTgiLCJ4bXNfc3NtIjoiMSIsInhtc19zdCI6eyJzdWIiOiJ0Wmx6dkhoaXRrWjIycFZUQnRkVnNiNk9DUUJpcmFPajlLNDBQZ2JLVHdzIn0sInhtc19zdWJfZmN0IjoiMyA4IiwieG1zX3RjZHQiOjE0MzcxMTkyNzEsInhtc190bnRfZmN0IjoiMyAxNCJ9.ZV8sMo-c6JuxQmEMnpa-rwpDeQt6Lm-aREavCCIS4737WLbgL58AkIIdFzTJqc-pfJQ45nZRUdZx0l2A9ldTJczmvhwum01mPnnYqDuJeupBgaE-6e1kdnGRU1W0d8urHAM4NEw0607sepPr7s4f5MYTQZPy26ZHmV_HGAk2L9Y41Dy2e_fVjP2G8WDtx3eo2N-G35JMLB-AB1F2DNLI3sSh_mtA_7OQlqo7Y2JSrndU3nMZZDc8bkYpehC7EH_gRYApNoDG-FgVV2uJXprt6E4zCKyzUvYzI4hN1GyWWd7_XQJpPF6z9rbgNw3SBjOVTnd7mANz9MhUjQnE3Wml8A"; // token tạm thời
     const driveId = "b!1FxBlWj8ekuwPxAKTD-bpQEmUDASyytPjgSNLCERr-cX4itvhM5iRaNcje-tpPux";
     const itemId = "01CPEFVA5SOSU4IOCPIFCZYG74B2GNPWPV";
-    const tableEquipment = "EquipmentList";
-    const tableUsage = "UsingRecord";
-
+    const tableName = "EquipmentList";
     const colNames = ["Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
                       "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
                       "Responsible_By","Team","Location","Picture","Function","Week Control",
                       "Purchase_Date","Supplier","Received_By","PO_No","Calibration_Date",
                       "Due_Date","PM_Date","Next_PM","Status","Remark"];
 
-    const dateColumns = new Set(["Purchase_Date", "Calibration_Date", "Due_Date", "PM_Date", "Next_PM"]);
+    const dateColumns = new Set([
+      "Purchase_Date", "Calibration_Date", "Due_Date", "PM_Date", "Next_PM"
+    ]);
 
     function excelSerialToDate(serial) {
       const ms = (serial - 25569) * 86400000;
@@ -47,8 +47,10 @@
     function parseDateValue(val) {
       if (val == null || val === "") return null;
       if (typeof val === "number") return excelSerialToDate(val);
-      const iso = Date.parse(val);
-      if (!Number.isNaN(iso)) return new Date(iso);
+      if (typeof val === "string") {
+        const iso = Date.parse(val);
+        if (!Number.isNaN(iso)) return new Date(iso);
+      }
       return null;
     }
 
@@ -56,39 +58,37 @@
       return date.toLocaleDateString("vi-VN");
     }
 
-    // ===== Load Equipment Data =====
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     const infoEl = document.getElementById("info");
-    let labDescription = "";
 
     if (!code) {
       infoEl.innerText = "There is no code of Equipment on URL!";
     } else {
-      fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableEquipment}/rows`, {
+      fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableName}/rows`, {
         headers: { "Authorization": `Bearer ${accessToken}` }
       })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
-        const row = data.value?.find(r => r.values?.[0]?.[0] === code);
-        if (!row) {
-          infoEl.innerHTML = '<span class="error">Cannot Found the Equipment!</span>';
-          return;
+        const row = data?.value?.find(r => r.values?.[0]?.[0] === code);
+        if (row) {
+          let html = "";
+          const values = row.values[0];
+          values.forEach((val, i) => {
+            const colName = colNames[i];
+            if (dateColumns.has(colName)) {
+              const parsed = parseDateValue(val);
+              if (parsed) val = formatDateForDisplay(parsed);
+            }
+            html += `<b>${colName}:</b> ${val ?? ""}<br>`;
+          });
+          infoEl.innerHTML = html;
+        } else {
+          infoEl.innerHTML = '<span class="error">Cannot Fount the Equipment!</span>';
         }
-
-        const values = row.values[0];
-        labDescription = values[colNames.indexOf("LAB_Description")] || "";
-
-        let html = "";
-        values.forEach((val,i) => {
-          const colName = colNames[i];
-          if (dateColumns.has(colName)) {
-            const parsed = parseDateValue(val);
-            if (parsed) val = formatDateForDisplay(parsed);
-          }
-          html += `<b>${colName}:</b> ${val ?? ""}<br>`;
-        });
-        infoEl.innerHTML = html;
       })
       .catch(err => {
         console.error(err);
@@ -96,7 +96,9 @@
       });
     }
 
-    // ===== Save Usage Record =====
+    // ==== Xử lý Save Usage Record ====
+    const tableUsage = "UsingRecord";
+
     document.getElementById("saveBtn").onclick = async () => {
       const usageDate = document.getElementById("usageDate").value;
       const userName = document.getElementById("userName").value.trim();
@@ -105,10 +107,10 @@
       if (!usageDate) { statusEl.style.color="red"; statusEl.textContent="Please select Usage Date!"; return; }
       if (!userName) { statusEl.style.color="red"; statusEl.textContent="Please enter User!"; return; }
 
-      statusEl.style.color="black";
-      statusEl.textContent = "Saving...";
+      const labDescMatch = infoEl.innerHTML.match(/<b>LAB_Description:<\/b>\s*(.*?)<br>/);
+      const labDescription = labDescMatch ? labDescMatch[1] : "";
 
-      const newRow = { values: [[code, labDescription, usageDate, userName, ""]] };
+      const newRow = { values: [[code, labDescription, usageDate, userName]] };
 
       try {
         const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableUsage}/rows/add`;
