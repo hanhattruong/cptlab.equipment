@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>QR → Usage Record</title>
-<style>
-  body { font-family: Arial; padding: 20px; }
-  #info { margin-top: 20px; font-size: 14px; line-height: 1.6; }
-  .error { color: red; }
-</style>
+  <meta charset="UTF-8">
+  <title>QR → Usage Record</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    #info { margin-top: 20px; font-size: 14px; line-height: 1.6; }
+    #usageHistory { margin-top: 20px; border-collapse: collapse; width: 100%; }
+    #usageHistory th, #usageHistory td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    #usageHistory th { background-color: #f0f0f0; }
+    .error { color: red; }
+  </style>
 </head>
 <body>
 
@@ -17,111 +20,191 @@
 <br><hr><br>
 
 <h3>Record Usage</h3>
+
 <label>Usage Date:</label>
-<input type="date" id="usageDate">
+<input type="date" id="usageTime">
 <br><br>
+
 <label>User:</label>
 <input type="text" id="userInput" placeholder="Enter user name">
 <br><br>
-<button id="btnSave">Save Usage Record</button>
-<div id="status"></div>
+
+<button id="btnRecord">Save Usage Record</button>
+<div id="saveStatus"></div>
+
+<h3>Usage History</h3>
+<table id="usageHistory">
+  <thead>
+    <tr>
+      <th>Usage_Date</th>
+      <th>User</th>
+      <th>Remark</th>
+    </tr>
+  </thead>
+  <tbody id="historyBody">
+    <tr><td colspan="3">Loading...</td></tr>
+  </tbody>
+</table>
 
 <script>
 // ===== Config =====
-const accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6IkNJR3BkdkxWUGJBczR3UDFPYmhUOEljd1lXYVo3UXBJcnlSUEM1RHYzbTAiLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84YjhjYzZjZi0wZWFhLTRiNjQtOThlNC02ZDQ2NzJjNDQ5MzAvIiwiaWF0IjoxNzY0NzQ1MjczLCJuYmYiOjE3NjQ3NDUyNzMsImV4cCI6MTc2NDgzMTk3MywiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsicDEiLCJjMSIsImMyIl0sImFpbyI6IkFYUUFpLzhhQUFBQVlpejE4RGdncDAyTG9yYnVaT2RMcVNMV21KS1hSL1d5RFcyOFNFSDFZZTViRGJHS2F6cHpvUmo4d3VoRU80OXA3U0xvNkxFa3J4NWFSK1ViRGViRVFnbUVWSm5DSlhrUDE1L2h4dVZvdDdOQk5kL2VZenE5dnZGZnppcHk0MjhyZ1ZVQ0hEYW9LUW9ST1JRb29CNXhXUT09IiwiYW1yIjpbInB3ZCIsInJzYSIsIm1mYSJdLCJhcHBfZGlzcGxheW5hbWUiOiJHcmFwaCBFeHBsb3JlciIsImFwcGlkIjoiZGU4YmM4YjUtZDlmOS00OGIxLWE4YWQtYjc0OGRhNzI1MDY0IiwiYXBwaWRhY3IiOiIwIiwiZGV2aWNlaWQiOiI0ODNlNzIxMC1hMzlmLTQyMjQtYjAzMS1mMGE1YmMxOTg2ZjAiLCJmYW1pbHlfbmFtZSI6IkhhIiwiZ2l2ZW5fbmFtZSI6Ik5oYXQgVHJ1b25nIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiNDIuMTE2LjUxLjQwIiwibmFtZSI6IlNhdmkgSGEgTmhhdCBUcnVvbmcgKFZOLlJZT0JJLUxBQikiLCJvaWQiOiJkNDFiZmFkZi05ZDhmLTRjZDItOTUwYy1iYzQ3ZTQ3NjFiODUiLCJvbnByZW1fc2lkIjoiUy0xLTUtMjEtNDk0MDg3MDU1LTM3OTEwNDkyNy0xNTY0NjA5MTY2LTMzOTYzMjkiLCJwbGF0ZiI6IjMiLCJwdWlkIjoiMTAwMzIwMDI5MzRDQUMwMyIsInJoIjoiMS5BWElBejhhTWk2b09aRXVZNUcxR2NzUkpNQU1BQUFBQUFBQUF3QUFBQUFBQUFBQ0dBYUJ5QUEuIiwic2NwIjoiQ2FsZW5kYXJzLlJlYWRXcml0ZSBDb250YWN0cy5SZWFkV3JpdGUgRGV2aWNlLlJlYWQuQWxsIERldmljZU1hbmFnZW1lbnRDb25maWd1cmF0aW9uLlJlYWQuQWxsIERpcmVjdG9yeS5SZWFkLkFsbCBEaXJlY3RvcnkuUmVhZFdyaXRlLkFsbCBGaWxlcy5SZWFkV3JpdGUuQWxsIE1haWwuUmVhZFdyaXRlIE5vdGVzLlJlYWRXcml0ZS5BbGwgb3BlbmlkIFBlb3BsZS5SZWFkIHByb2ZpbGUgU2l0ZXMuUmVhZFdyaXRlLkFsbCBUYXNrcy5SZWFkV3JpdGUgVXNlci5SZWFkIFVzZXIuUmVhZEJhc2ljLkFsbCBVc2VyLlJlYWRXcml0ZSBlbWFpbCIsInNpZCI6IjAwOGQwNWE5LTg4ODItM2NkOC1hZDU5LTc4N2RiOTI0ODQ1MCIsInNpZ25pbl9zdGF0ZSI6WyJkdmNfbW5nZCIsImR2Y19jbXAiLCJkdmNfZG1qZCIsImlua25vd25udHdrIiwia21zaSJdLCJzdWIiOiJBejd2cHg5RVgwTV9YTHo2Q094cVk5QnJoTWc2REVIaVA2YXRFeDdmODBJIiwidGVuYW50X3JlZ2lvbl9zY29wZSI6IkFTIiwidGlkIjoiOGI4Y2M2Y2YtMGVhYS00YjY0LTk4ZTQtNmQ0NjcyYzQ0OTMwIiwidW5pcXVlX25hbWUiOiJOaGF0VHJ1b25nLkhhQHR0aWdyb3VwLmNvbS52biIsInVwbiI6Ik5oYXRUcnVvbmcuSGFAdHRpZ3JvdXAuY29tLnZuIiwidXRpIjoiY3ExSVprTHd6MGU0MU5Wa1dmRVNBQSIsInZlciI6IjEuMCIsIndpZHMiOlsiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19hY2QiOjE0NzQ2NjQwNzMsInhtc19hY3RfZmN0IjoiMyA3IiwieG1zX2NjIjpbIkNQMSJdLCJ4bXNfZnRkIjoiUTNsSzZsZXRwRTFDaW5VQjczU0VhclV1YkQ4cXprdnQ4Y1QyOXBGTUh2Y0JhMjl5WldGalpXNTBjbUZzTFdSemJYTSIsInhtc19pZHJlbCI6IjEgNiIsInhtc19zc20iOiIxIiwieG1zX3N0Ijp7InN1YiI6InRabHp2SGhpdGtaMjJwVlRCdGRWc2I2T0NRQmlyYU9qOUs0MFBnYktUd3MifSwieG1zX3N1Yl9mY3QiOiIzIDEwIiwieG1zX3RjZHQiOjE0MzcxMTkyNzEsInhtc190bnRfZmN0IjoiMyAyIn0.MPZkyF2p8_coqj6SfamxFuP9VGzUJuJ6GmT0mu1vdazZOM8cD0vjfi0-3RYNWOYnY1ht_CNXfGTwD5-7DrOwqYhn5uBqvCqdap_lTLg1rXGCEPf7gO9lyJTkTsvk-48RiPUUkRZt6AKQg0zgPfbfnVp7t3CDDHzteRwANHhPfXUI6H7AnEK0eT8zWkuLa5sOuJIxwhsUHhBs81xMo9RMgtuyVaK1_KEEE9S4bDkQh1tv8HwGt3HTM0lnc2nhQqW1NN5tuOb_jWHCqABY-xSgzSRMsGH0lPbh0XnbN7yzTF8UKckDIs6uEGkxqjdfz0qXsKXGmM8gnRkjKSrW9tYLIw"; // token còn hiệu lực
+const accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6IkVjbFhMUndVYjFBMmJvYW9yaGNVN01KWU8wQTN1dFRCbkwwZkxzSDItX3MiLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84YjhjYzZjZi0wZWFhLTRiNjQtOThlNC02ZDQ2NzJjNDQ5MzAvIiwiaWF0IjoxNzY0MjE0Njg0LCJuYmYiOjE3NjQyMTQ2ODQsImV4cCI6MTc2NDMwMTM4NCwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsicDEiLCJjMSIsImMyIl0sImFpbyI6IkFYUUFpLzhhQUFBQWM3aGc3Z3lXWFNqbkNxWFdCaEJobUpVTFR1dy9RYXZqMFVTd3NEOHhQYkhxOW5HVjVLOG9NM1VHcDh0TkIyMG12MmljZDNxWis3MDQ2RGlXZzhaaTNmL0p2dlhkT3JWWXNTeXBKMk9od0dtTkNLTHVlYmhvdVpQb290bjJGY3AvSURxNFAwT3ZuOVg1MXZ6QmRiR2RBQT09IiwiYW1yIjpbInB3ZCIsInJzYSIsIm1mYSJdLCJhcHBfZGlzcGxheW5hbWUiOiJHcmFwaCBFeHBsb3JlciIsImFwcGlkIjoiZGU4YmM4YjUtZDlmOS00OGIxLWE4YWQtYjc0OGRhNzI1MDY0IiwiYXBwaWRhY3IiOiIwIiwiZGV2aWNlaWQiOiI0ODNlNzIxMC1hMzlmLTQyMjQtYjAzMS1mMGE1YmMxOTg2ZjAiLCJmYW1pbHlfbmFtZSI6IkhhIiwiZ2l2ZW5fbmFtZSI6Ik5oYXQgVHJ1b25nIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiNDIuMTE2LjUxLjQwIiwibmFtZSI6IlNhdmkgSGEgTmhhdCBUcnVvbmcgKFZOLlJZT0JJLUxBQikiLCJvaWQiOiJkNDFiZmFkZi05ZDhmLTRjZDItOTUwYy1iYzQ3ZTQ3NjFiODUiLCJvbnByZW1fc2lkIjoiUy0xLTUtMjEtNDk0MDg3MDU1LTM3OTEwNDkyNy0xNTY0NjA5MTY2LTMzOTYzMjkiLCJwbGF0ZiI6IjMiLCJwdWlkIjoiMTAwMzIwMDI5MzRDQUMwMyIsInJoIjoiMS5BWElBejhhTWk2b09aRXVZNUcxR2NzUkpNQU1BQUFBQUFBQUF3QUFBQUFBQUFBQ0dBYUJ5QUEuIiwic2NwIjoiQ2FsZW5kYXJzLlJlYWRXcml0ZSBDb250YWN0cy5SZWFkV3JpdGUgRGV2aWNlLlJlYWQuQWxsIERldmljZU1hbmFnZW1lbnRDb25maWd1cmF0aW9uLlJlYWQuQWxsIERpcmVjdG9yeS5SZWFkLkFsbCBEaXJlY3RvcnkuUmVhZFdyaXRlLkFsbCBGaWxlcy5SZWFkV3JpdGUuQWxsIE1haWwuUmVhZFdyaXRlIE5vdGVzLlJlYWRXcml0ZS5BbGwgb3BlbmlkIFBlb3BsZS5SZWFkIHByb2ZpbGUgU2l0ZXMuUmVhZFdyaXRlLkFsbCBUYXNrcy5SZWFkV3JpdGUgVXNlci5SZWFkIFVzZXIuUmVhZEJhc2ljLkFsbCBVc2VyLlJlYWRXcml0ZSBlbWFpbCIsInNpZCI6IjAwOGQwNWE5LTg4ODItM2NkOC1hZDU5LTc4N2RiOTI0ODQ1MCIsInNpZ25pbl9zdGF0ZSI6WyJkdmNfbW5nZCIsImR2Y19jbXAiLCJkdmNfZG1qZCIsImlua25vd25udHdrIiwia21zaSJdLCJzdWIiOiJBejd2cHg5RVgwTV9YTHo2Q094cVk5QnJoTWc2REVIaVA2YXRFeDdmODBJIiwidGVuYW50X3JlZ2lvbl9zY29wZSI6IkFTIiwidGlkIjoiOGI4Y2M2Y2YtMGVhYS00YjY0LTk4ZTQtNmQ0NjcyYzQ0OTMwIiwidW5pcXVlX25hbWUiOiJOaGF0VHJ1b25nLkhhQHR0aWdyb3VwLmNvbS52biIsInVwbiI6Ik5oYXRUcnVvbmcuSGFAdHRpZ3JvdXAuY29tLnZuIiwidXRpIjoiT3pzVU9ENk9mMEs0QmliMEltZWpBQSIsInZlciI6IjEuMCIsIndpZHMiOlsiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19hY2QiOjE0NzQ2NjQwNzMsInhtc19hY3RfZmN0IjoiMyA3IiwieG1zX2NjIjpbIkNQMSJdLCJ4bXNfZnRkIjoiMTBIc005TU9SYk9tekhCbThaYnlmSTlDM2I1QW9vVzVWRV9XZ2diV3V2SUJhMjl5WldGemIzVjBhQzFrYzIxeiIsInhtc19pZHJlbCI6IjEgMTgiLCJ4bXNfc3NtIjoiMSIsInhtc19zdCI6eyJzdWIiOiJ0Wmx6dkhoaXRrWjIycFZUQnRkVnNiNk9DUUJpcmFPajlLNDBQZ2JLVHdzIn0sInhtc19zdWJfZmN0IjoiMyA4IiwieG1zX3RjZHQiOjE0MzcxMTkyNzEsInhtc190bnRfZmN0IjoiMyAxNCJ9.ZV8sMo-c6JuxQmEMnpa-rwpDeQt6Lm-aREavCCIS4737WLbgL58AkIIdFzTJqc-pfJQ45nZRUdZx0l2A9ldTJczmvhwum01mPnnYqDuJeupBgaE-6e1kdnGRU1W0d8urHAM4NEw0607sepPr7s4f5MYTQZPy26ZHmV_HGAk2L9Y41Dy2e_fVjP2G8WDtx3eo2N-G35JMLB-AB1F2DNLI3sSh_mtA_7OQlqo7Y2JSrndU3nMZZDc8bkYpehC7EH_gRYApNoDG-FgVV2uJXprt6E4zCKyzUvYzI4hN1GyWWd7_XQJpPF6z9rbgNw3SBjOVTnd7mANz9MhUjQnE3Wml8A"; // đổi token còn hiệu lực
 const driveId = "b!1FxBlWj8ekuwPxAKTD-bpQEmUDASyytPjgSNLCERr-cX4itvhM5iRaNcje-tpPux";
 const itemId = "01CPEFVA5SOSU4IOCPIFCZYG74B2GNPWPV";
 const tableEquipment = "EquipmentList";
 const tableUsage = "UsingRecord";
 
-// ===== Globals =====
-let currentCode = "";
-let currentLabDescription = "";
+const colNames = [
+  "Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
+  "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
+  "Responsible_By","Team","Location","Picture","Function","Week Control",
+  "Purchase_Date","Supplier","Received_By","PO_No","Calibration_Date",
+  "Due_Date","PM_Date","Next_PM","Status","Remark"
+];
 
-// ===== Helpers =====
-function fetchEquipment() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get("code");
-  const infoEl = document.getElementById("info");
-  if (!code) { infoEl.innerHTML = "No code in URL!"; return; }
+const dateColumns = new Set([
+  "Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"
+]);
 
+function excelSerialToDate(serial) {
+  const ms = (serial - 25569) * 86400000;
+  return new Date(ms);
+}
+
+function parseDateValue(val) {
+  if (val == null || val === "") return null;
+  if (typeof val === "number") return excelSerialToDate(val);
+  const iso = Date.parse(val);
+  if (!Number.isNaN(iso)) return new Date(iso);
+  return null;
+}
+
+function formatDateForDisplay(date) {
+  return date.toLocaleDateString("vi-VN");
+}
+
+// ===== Get QR Code =====
+const params = new URLSearchParams(window.location.search);
+const code = params.get("code");
+const infoEl = document.getElementById("info");
+let labDescription = "";
+
+if (!code) {
+  infoEl.innerHTML = "There is no code of Equipment on URL!";
+} else {
   fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableEquipment}/rows`, {
     headers: { "Authorization": `Bearer ${accessToken}` }
   })
   .then(res => res.json())
   .then(data => {
-    const header = data.value?.[0]?.values?.[0] || [];
-    const codeIndex = header.findIndex(c => c === "Code");
-    const labIndex = header.findIndex(c => c === "LAB_Description");
+    const headerRow = data.value?.[0]?.values?.[0] || [];
+    const codeColIndex = headerRow.findIndex(c => c === "Code");
+    const labColIndex = headerRow.findIndex(c => c === "LAB_Description");
 
-    if (codeIndex === -1) { infoEl.innerHTML = '<span class="error">Cannot find column "Code"</span>'; return; }
+    if (codeColIndex === -1) {
+      infoEl.innerHTML = '<span class="error">Cannot find column "Code"!</span>';
+      return;
+    }
 
-    const row = data.value?.find(r => r.values?.[0]?.[codeIndex] === code);
-    if (!row) { infoEl.innerHTML = '<span class="error">Equipment not found!</span>'; return; }
+    const row = data.value?.find(r => r.values?.[0]?.[codeColIndex] === code);
+    if (!row) {
+      infoEl.innerHTML = '<span class="error">Cannot Found the Equipment!</span>';
+      return;
+    }
 
     const values = row.values[0];
-    currentCode = values[codeIndex];
-    currentLabDescription = labIndex !== -1 ? values[labIndex] : "";
+    labDescription = labColIndex !== -1 ? values[labColIndex] : "";
 
-    // Hiển thị thông tin đơn giản
-    infoEl.innerHTML = `<b>Code:</b> ${currentCode}<br><b>LAB_Description:</b> ${currentLabDescription}`;
+    let html = "";
+    values.forEach((val, i) => {
+      const colName = colNames[i] || `Column${i}`;
+      if (dateColumns.has(colName)) {
+        const parsed = parseDateValue(val);
+        if (parsed) val = formatDateForDisplay(parsed);
+      }
+      html += `<b>${colName}:</b> ${val ?? ""}<br>`;
+    });
+    infoEl.innerHTML = html;
+
+    // Load usage history
+    loadUsageHistory();
   })
   .catch(err => {
+    infoEl.innerHTML = '<span class="error">Error When Get Data!</span>';
     console.error(err);
-    infoEl.innerHTML = '<span class="error">Error fetching EquipmentList</span>';
   });
 }
 
-// ===== Save Usage =====
-function saveUsage() {
-  const usageDate = document.getElementById("usageDate").value;
+// ===== Save Usage Record =====
+document.getElementById("btnRecord").onclick = async function() {
+  const usageTime = document.getElementById("usageTime").value;
   const userName = document.getElementById("userInput").value.trim();
-  const statusEl = document.getElementById("status");
+  const statusEl = document.getElementById("saveStatus");
 
-  if (!usageDate) { statusEl.style.color="red"; statusEl.textContent="Select Usage Date!"; return; }
-  if (!userName) { statusEl.style.color="red"; statusEl.textContent="Enter User!"; return; }
-  if (!currentCode) { statusEl.style.color="red"; statusEl.textContent="No Equipment loaded!"; return; }
-
-  const newRow = {
-    values: [[
-      currentCode,
-      currentLabDescription,
-      usageDate,
-      userName,
-      "" // Remark empty
-    ]]
-  };
+  if (!usageTime) { statusEl.style.color="red"; statusEl.textContent="Please select Usage Date!"; return; }
+  if (!userName) { statusEl.style.color="red"; statusEl.textContent="Please enter User!"; return; }
 
   statusEl.style.color="black";
   statusEl.textContent="Saving...";
 
-  fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableUsage}/rows/add`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${accessToken}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(newRow)
-  })
-  .then(res => res.json().then(data => ({status: res.status, data})))
-  .then(resp => {
-    if (resp.status >= 400) throw new Error(JSON.stringify(resp.data));
+  const newRow = { values: [[code, labDescription, usageTime, userName, ""]] };
+
+  try {
+    const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableUsage}/rows/add`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify(newRow)
+    });
+
+    const text = await res.text();
+    console.log("Response:", res.status, text);
+    if (!res.ok) throw new Error(text);
+
     statusEl.style.color="green";
     statusEl.textContent="Saved Successfully!";
-    document.getElementById("usageDate").value="";
+    document.getElementById("usageTime").value="";
     document.getElementById("userInput").value="";
-  })
-  .catch(err => {
-    console.error(err);
+
+    // Reload history
+    loadUsageHistory();
+
+  } catch (err) {
     statusEl.style.color="red";
     statusEl.textContent="Error saving data! Check console.";
-  });
+    console.error("Error:", err);
+  }
+};
+
+// ===== Load Usage History =====
+async function loadUsageHistory() {
+  const tbody = document.getElementById("historyBody");
+  tbody.innerHTML = "<tr><td colspan='3'>Loading...</td></tr>";
+
+  try {
+    const res = await fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableUsage}/rows`, {
+      headers: { "Authorization": `Bearer ${accessToken}` }
+    });
+    const data = await res.json();
+
+    // Filter rows by current code
+    const rows = data.value?.filter(r => r.values?.[0]?.[0] === code) || [];
+    if (!rows.length) { tbody.innerHTML="<tr><td colspan='3'>No usage record yet.</td></tr>"; return; }
+
+    tbody.innerHTML = "";
+    rows.forEach(r => {
+      const v = r.values[0];
+      const usageDate = v[2] || "";
+      const user = v[3] || "";
+      const remark = v[4] || "";
+      tbody.innerHTML += `<tr><td>${usageDate}</td><td>${user}</td><td>${remark}</td></tr>`;
+    });
+
+  } catch(err) {
+    tbody.innerHTML="<tr><td colspan='3'>Error loading history.</td></tr>";
+    console.error("Error loading history:", err);
+  }
 }
-
-// ===== Init =====
-fetchEquipment();
-document.getElementById("btnSave").onclick = saveUsage;
 </script>
-
 </body>
 </html>
