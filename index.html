@@ -1,136 +1,144 @@
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <title>CPT LAB Scanner</title>
-  <style>
-    body { font-family: Arial, Helvetica, sans-serif; padding: 20px; }
-    #info { margin-top: 20px; font-size: 14px; line-height: 1.6; }
-    b { color: #333; }
-    .error { color: #b00020; }
-  </style>
-</head>
-<body>
-  <h2>Detail Information</h2>
-  <div id="info">Loading Data...</div>
+<script>
+// ===== Thông tin bảng =====
+const accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6IkNJR3BkdkxWUGJBczR3UDFPYmhUOEljd1lXYVo3UXBJcnlSUEM1RHYzbTAiLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84YjhjYzZjZi0wZWFhLTRiNjQtOThlNC02ZDQ2NzJjNDQ5MzAvIiwiaWF0IjoxNzY0NzQ1MjczLCJuYmYiOjE3NjQ3NDUyNzMsImV4cCI6MTc2NDgzMTk3MywiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsicDEiLCJjMSIsImMyIl0sImFpbyI6IkFYUUFpLzhhQUFBQVlpejE4RGdncDAyTG9yYnVaT2RMcVNMV21KS1hSL1d5RFcyOFNFSDFZZTViRGJHS2F6cHpvUmo4d3VoRU80OXA3U0xvNkxFa3J4NWFSK1ViRGViRVFnbUVWSm5DSlhrUDE1L2h4dVZvdDdOQk5kL2VZenE5dnZGZnppcHk0MjhyZ1ZVQ0hEYW9LUW9ST1JRb29CNXhXUT09IiwiYW1yIjpbInB3ZCIsInJzYSIsIm1mYSJdLCJhcHBfZGlzcGxheW5hbWUiOiJHcmFwaCBFeHBsb3JlciIsImFwcGlkIjoiZGU4YmM4YjUtZDlmOS00OGIxLWE4YWQtYjc0OGRhNzI1MDY0IiwiYXBwaWRhY3IiOiIwIiwiZGV2aWNlaWQiOiI0ODNlNzIxMC1hMzlmLTQyMjQtYjAzMS1mMGE1YmMxOTg2ZjAiLCJmYW1pbHlfbmFtZSI6IkhhIiwiZ2l2ZW5fbmFtZSI6Ik5oYXQgVHJ1b25nIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiNDIuMTE2LjUxLjQwIiwibmFtZSI6IlNhdmkgSGEgTmhhdCBUcnVvbmcgKFZOLlJZT0JJLUxBQikiLCJvaWQiOiJkNDFiZmFkZi05ZDhmLTRjZDItOTUwYy1iYzQ3ZTQ3NjFiODUiLCJvbnByZW1fc2lkIjoiUy0xLTUtMjEtNDk0MDg3MDU1LTM3OTEwNDkyNy0xNTY0NjA5MTY2LTMzOTYzMjkiLCJwbGF0ZiI6IjMiLCJwdWlkIjoiMTAwMzIwMDI5MzRDQUMwMyIsInJoIjoiMS5BWElBejhhTWk2b09aRXVZNUcxR2NzUkpNQU1BQUFBQUFBQUF3QUFBQUFBQUFBQ0dBYUJ5QUEuIiwic2NwIjoiQ2FsZW5kYXJzLlJlYWRXcml0ZSBDb250YWN0cy5SZWFkV3JpdGUgRGV2aWNlLlJlYWQuQWxsIERldmljZU1hbmFnZW1lbnRDb25maWd1cmF0aW9uLlJlYWQuQWxsIERpcmVjdG9yeS5SZWFkLkFsbCBEaXJlY3RvcnkuUmVhZFdyaXRlLkFsbCBGaWxlcy5SZWFkV3JpdGUuQWxsIE1haWwuUmVhZFdyaXRlIE5vdGVzLlJlYWRXcml0ZS5BbGwgb3BlbmlkIFBlb3BsZS5SZWFkIHByb2ZpbGUgU2l0ZXMuUmVhZFdyaXRlLkFsbCBUYXNrcy5SZWFkV3JpdGUgVXNlci5SZWFkIFVzZXIuUmVhZEJhc2ljLkFsbCBVc2VyLlJlYWRXcml0ZSBlbWFpbCIsInNpZCI6IjAwOGQwNWE5LTg4ODItM2NkOC1hZDU5LTc4N2RiOTI0ODQ1MCIsInNpZ25pbl9zdGF0ZSI6WyJkdmNfbW5nZCIsImR2Y19jbXAiLCJkdmNfZG1qZCIsImlua25vd25udHdrIiwia21zaSJdLCJzdWIiOiJBejd2cHg5RVgwTV9YTHo2Q094cVk5QnJoTWc2REVIaVA2YXRFeDdmODBJIiwidGVuYW50X3JlZ2lvbl9zY29wZSI6IkFTIiwidGlkIjoiOGI4Y2M2Y2YtMGVhYS00YjY0LTk4ZTQtNmQ0NjcyYzQ0OTMwIiwidW5pcXVlX25hbWUiOiJOaGF0VHJ1b25nLkhhQHR0aWdyb3VwLmNvbS52biIsInVwbiI6Ik5oYXRUcnVvbmcuSGFAdHRpZ3JvdXAuY29tLnZuIiwidXRpIjoiY3ExSVprTHd6MGU0MU5Wa1dmRVNBQSIsInZlciI6IjEuMCIsIndpZHMiOlsiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19hY2QiOjE0NzQ2NjQwNzMsInhtc19hY3RfZmN0IjoiMyA3IiwieG1zX2NjIjpbIkNQMSJdLCJ4bXNfZnRkIjoiUTNsSzZsZXRwRTFDaW5VQjczU0VhclV1YkQ4cXprdnQ4Y1QyOXBGTUh2Y0JhMjl5WldGalpXNTBjbUZzTFdSemJYTSIsInhtc19pZHJlbCI6IjEgNiIsInhtc19zc20iOiIxIiwieG1zX3N0Ijp7InN1YiI6InRabHp2SGhpdGtaMjJwVlRCdGRWc2I2T0NRQmlyYU9qOUs0MFBnYktUd3MifSwieG1zX3N1Yl9mY3QiOiIzIDEwIiwieG1zX3RjZHQiOjE0MzcxMTkyNzEsInhtc190bnRfZmN0IjoiMyAyIn0.MPZkyF2p8_coqj6SfamxFuP9VGzUJuJ6GmT0mu1vdazZOM8cD0vjfi0-3RYNWOYnY1ht_CNXfGTwD5-7DrOwqYhn5uBqvCqdap_lTLg1rXGCEPf7gO9lyJTkTsvk-48RiPUUkRZt6AKQg0zgPfbfnVp7t3CDDHzteRwANHhPfXUI6H7AnEK0eT8zWkuLa5sOuJIxwhsUHhBs81xMo9RMgtuyVaK1_KEEE9S4bDkQh1tv8HwGt3HTM0lnc2nhQqW1NN5tuOb_jWHCqABY-xSgzSRMsGH0lPbh0XnbN7yzTF8UKckDIs6uEGkxqjdfz0qXsKXGmM8gnRkjKSrW9tYLIw";
+const driveId = "b!1FxBlWj8ekuwPxAKTD-bpQEmUDASyytPjgSNLCERr-cX4itvhM5iRaNcje-tpPux";
+const itemId = "01CPEFVA5SOSU4IOCPIFCZYG74B2GNPWPV";
 
-  <script>
-    // ===== Thay các giá trị =====
-    const accessToken = "eyJ0eXAiOiJKV1QiLCJub25jZSI6IkVjbFhMUndVYjFBMmJvYW9yaGNVN01KWU8wQTN1dFRCbkwwZkxzSDItX3MiLCJhbGciOiJSUzI1NiIsIng1dCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyIsImtpZCI6InJ0c0ZULWItN0x1WTdEVlllU05LY0lKN1ZuYyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84YjhjYzZjZi0wZWFhLTRiNjQtOThlNC02ZDQ2NzJjNDQ5MzAvIiwiaWF0IjoxNzY0MjE0Njg0LCJuYmYiOjE3NjQyMTQ2ODQsImV4cCI6MTc2NDMwMTM4NCwiYWNjdCI6MCwiYWNyIjoiMSIsImFjcnMiOlsicDEiLCJjMSIsImMyIl0sImFpbyI6IkFYUUFpLzhhQUFBQWM3aGc3Z3lXWFNqbkNxWFdCaEJobUpVTFR1dy9RYXZqMFVTd3NEOHhQYkhxOW5HVjVLOG9NM1VHcDh0TkIyMG12MmljZDNxWis3MDQ2RGlXZzhaaTNmL0p2dlhkT3JWWXNTeXBKMk9od0dtTkNLTHVlYmhvdVpQb290bjJGY3AvSURxNFAwT3ZuOVg1MXZ6QmRiR2RBQT09IiwiYW1yIjpbInB3ZCIsInJzYSIsIm1mYSJdLCJhcHBfZGlzcGxheW5hbWUiOiJHcmFwaCBFeHBsb3JlciIsImFwcGlkIjoiZGU4YmM4YjUtZDlmOS00OGIxLWE4YWQtYjc0OGRhNzI1MDY0IiwiYXBwaWRhY3IiOiIwIiwiZGV2aWNlaWQiOiI0ODNlNzIxMC1hMzlmLTQyMjQtYjAzMS1mMGE1YmMxOTg2ZjAiLCJmYW1pbHlfbmFtZSI6IkhhIiwiZ2l2ZW5fbmFtZSI6Ik5oYXQgVHJ1b25nIiwiaWR0eXAiOiJ1c2VyIiwiaXBhZGRyIjoiNDIuMTE2LjUxLjQwIiwibmFtZSI6IlNhdmkgSGEgTmhhdCBUcnVvbmcgKFZOLlJZT0JJLUxBQikiLCJvaWQiOiJkNDFiZmFkZi05ZDhmLTRjZDItOTUwYy1iYzQ3ZTQ3NjFiODUiLCJvbnByZW1fc2lkIjoiUy0xLTUtMjEtNDk0MDg3MDU1LTM3OTEwNDkyNy0xNTY0NjA5MTY2LTMzOTYzMjkiLCJwbGF0ZiI6IjMiLCJwdWlkIjoiMTAwMzIwMDI5MzRDQUMwMyIsInJoIjoiMS5BWElBejhhTWk2b09aRXVZNUcxR2NzUkpNQU1BQUFBQUFBQUF3QUFBQUFBQUFBQ0dBYUJ5QUEuIiwic2NwIjoiQ2FsZW5kYXJzLlJlYWRXcml0ZSBDb250YWN0cy5SZWFkV3JpdGUgRGV2aWNlLlJlYWQuQWxsIERldmljZU1hbmFnZW1lbnRDb25maWd1cmF0aW9uLlJlYWQuQWxsIERpcmVjdG9yeS5SZWFkLkFsbCBEaXJlY3RvcnkuUmVhZFdyaXRlLkFsbCBGaWxlcy5SZWFkV3JpdGUuQWxsIE1haWwuUmVhZFdyaXRlIE5vdGVzLlJlYWRXcml0ZS5BbGwgb3BlbmlkIFBlb3BsZS5SZWFkIHByb2ZpbGUgU2l0ZXMuUmVhZFdyaXRlLkFsbCBUYXNrcy5SZWFkV3JpdGUgVXNlci5SZWFkIFVzZXIuUmVhZEJhc2ljLkFsbCBVc2VyLlJlYWRXcml0ZSBlbWFpbCIsInNpZCI6IjAwOGQwNWE5LTg4ODItM2NkOC1hZDU5LTc4N2RiOTI0ODQ1MCIsInNpZ25pbl9zdGF0ZSI6WyJkdmNfbW5nZCIsImR2Y19jbXAiLCJkdmNfZG1qZCIsImlua25vd25udHdrIiwia21zaSJdLCJzdWIiOiJBejd2cHg5RVgwTV9YTHo2Q094cVk5QnJoTWc2REVIaVA2YXRFeDdmODBJIiwidGVuYW50X3JlZ2lvbl9zY29wZSI6IkFTIiwidGlkIjoiOGI4Y2M2Y2YtMGVhYS00YjY0LTk4ZTQtNmQ0NjcyYzQ0OTMwIiwidW5pcXVlX25hbWUiOiJOaGF0VHJ1b25nLkhhQHR0aWdyb3VwLmNvbS52biIsInVwbiI6Ik5oYXRUcnVvbmcuSGFAdHRpZ3JvdXAuY29tLnZuIiwidXRpIjoiT3pzVU9ENk9mMEs0QmliMEltZWpBQSIsInZlciI6IjEuMCIsIndpZHMiOlsiYjc5ZmJmNGQtM2VmOS00Njg5LTgxNDMtNzZiMTk0ZTg1NTA5Il0sInhtc19hY2QiOjE0NzQ2NjQwNzMsInhtc19hY3RfZmN0IjoiMyA3IiwieG1zX2NjIjpbIkNQMSJdLCJ4bXNfZnRkIjoiMTBIc005TU9SYk9tekhCbThaYnlmSTlDM2I1QW9vVzVWRV9XZ2diV3V2SUJhMjl5WldGemIzVjBhQzFrYzIxeiIsInhtc19pZHJlbCI6IjEgMTgiLCJ4bXNfc3NtIjoiMSIsInhtc19zdCI6eyJzdWIiOiJ0Wmx6dkhoaXRrWjIycFZUQnRkVnNiNk9DUUJpcmFPajlLNDBQZ2JLVHdzIn0sInhtc19zdWJfZmN0IjoiMyA4IiwieG1zX3RjZHQiOjE0MzcxMTkyNzEsInhtc190bnRfZmN0IjoiMyAxNCJ9.ZV8sMo-c6JuxQmEMnpa-rwpDeQt6Lm-aREavCCIS4737WLbgL58AkIIdFzTJqc-pfJQ45nZRUdZx0l2A9ldTJczmvhwum01mPnnYqDuJeupBgaE-6e1kdnGRU1W0d8urHAM4NEw0607sepPr7s4f5MYTQZPy26ZHmV_HGAk2L9Y41Dy2e_fVjP2G8WDtx3eo2N-G35JMLB-AB1F2DNLI3sSh_mtA_7OQlqo7Y2JSrndU3nMZZDc8bkYpehC7EH_gRYApNoDG-FgVV2uJXprt6E4zCKyzUvYzI4hN1GyWWd7_XQJpPF6z9rbgNw3SBjOVTnd7mANz9MhUjQnE3Wml8A"; // token tạm thời
-    const driveId = "b!1FxBlWj8ekuwPxAKTD-bpQEmUDASyytPjgSNLCERr-cX4itvhM5iRaNcje-tpPux";
-    const itemId = "01CPEFVA5SOSU4IOCPIFCZYG74B2GNPWPV";
-    const tableName = "EquipmentList";
-    const colNames = ["Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
-                      "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
-                      "Responsible_By","Team","Location","Picture","Function","Week Control",
-                      "Purchase_Date","Supplier","Received_By","PO_No","Calibration_Date",
-                      "Due_Date","PM_Date","Next_PM","Status","Remark"];
+const tableEquipment = "EquipmentList";
+const tableUsage = "UsingRecord";   // <== bảng mới bạn yêu cầu
 
-    // Các cột kiểu ngày cần format
-    const dateColumns = new Set([
-      "Purchase_Date", "Calibration_Date", "Due_Date", "PM_Date", "Next_PM"
-    ]);
+const colNames = ["Code","No","Category","Brand","Model_NO","Serial_No","Asset_Type",
+                  "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
+                  "Responsible_By","Team","Location","Picture","Function","Week Control",
+                  "Purchase_Date","Supplier","Received_By","PO_No","Calibration_Date",
+                  "Due_Date","PM_Date","Next_PM","Status","Remark"];
 
-    // === Helpers ===
+const dateColumns = new Set([
+  "Purchase_Date", "Calibration_Date", "Due_Date", "PM_Date", "Next_PM"
+]);
 
-    // Excel serial -> JS Date
-    function excelSerialToDate(serial) {
-      // Excel epoch offset: 25569 ngày từ 1899-12-30 đến 1970-01-01
-      const ms = (serial - 25569) * 86400000;
-      return new Date(ms); // dùng UTC milliseconds
-    }
+/* ==== Helper ==== */
+function excelSerialToDate(serial) {
+  const ms = (serial - 25569) * 86400000;
+  return new Date(ms);
+}
+function parseDateValue(val) {
+  if (val == null || val === "") return null;
+  if (typeof val === "number") return excelSerialToDate(val);
+  const iso = Date.parse(val);
+  if (!Number.isNaN(iso)) return new Date(iso);
+  return null;
+}
+function formatDateForDisplay(date) {
+  return date.toLocaleDateString("vi-VN");
+}
 
-    // Parse giá trị ngày từ nhiều dạng: number (serial), ISO, yyyy-mm-dd, dd/mm/yyyy...
-    function parseDateValue(val) {
-      if (val == null || val === "") return null;
+/* ==== Lấy thông tin user từ token ==== */
+function getUserFromToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.name || payload.upn || payload.unique_name || "Unknown User";
+  } catch {
+    return "Unknown User";
+  }
+}
+const currentUser = getUserFromToken(accessToken);
 
-      if (typeof val === "number") {
-        // Excel serial (có thể có phần thập phân là thời gian)
-        return excelSerialToDate(val);
-      }
+/* ==== Lấy CODE từ URL ==== */
+const params = new URLSearchParams(window.location.search);
+const code = params.get("code");
 
-      if (typeof val === "string") {
-        // Thử ISO 8601 / yyyy-mm-dd
-        const iso = Date.parse(val);
-        if (!Number.isNaN(iso)) return new Date(iso);
+const infoEl = document.getElementById("info");
+let labDescription = "";   // sẽ lưu để ghi vào bảng UsingRecord
 
-        // dd/MM/yyyy hoặc d/M/yyyy, với / hoặc -
-        const m = val.match(/^(\d{1,2})\/\-\/\-$/);
-        if (m) {
-          const d = parseInt(m[1], 10);
-          const mm = parseInt(m[2], 10) - 1;
-          let yyyy = parseInt(m[3], 10);
-          // xử lý năm 2 chữ số (nếu có)
-          if (yyyy < 100) {
-            yyyy += (yyyy >= 50 ? 1900 : 2000); // quy ước
-          }
-          const dt = new Date(yyyy, mm, d);
-          if (!Number.isNaN(dt.getTime())) return dt;
+if (!code) {
+  infoEl.innerText = "There is no code of Equipment on URL!";
+} else {
+  fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableEquipment}/rows`, {
+    headers: { "Authorization": `Bearer ${accessToken}` }
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    const row = data.value?.find(r => r.values?.[0]?.[0] === code);
+
+    if (row) {
+      let html = "";
+      const values = row.values[0];
+
+      labDescription = values[7] || "";   // LAB_Description nằm cột index 7
+
+      values.forEach((val, i) => {
+        const colName = colNames[i];
+        if (dateColumns.has(colName)) {
+          const parsed = parseDateValue(val);
+          if (parsed) val = formatDateForDisplay(parsed);
         }
-      }
-
-      return null;
-    }
-
-    // Format Date -> chuỗi hiển thị
-    function formatDateForDisplay(date) {
-      // Hiển thị theo chuẩn Việt Nam: "dd/MM/yyyy"
-      return date.toLocaleDateString("vi-VN");
-      // Nếu muốn cố định: dd/MM/yyyy
-      // const d = String(date.getDate()).padStart(2, "0");
-      // const m = String(date.getMonth() + 1).padStart(2, "0");
-      // const y = date.getFullYear();
-      // return `${d}/${m}/${y}`;
-    }
-
-    // === Main ===
-
-    // Lấy code thiết bị từ URL
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-
-    const infoEl = document.getElementById("info");
-
-    if (!code) {
-      infoEl.innerText = "There is no code of Equipment on URL!";
-    } else {
-      fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableName}/rows`, {
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        const row = data?.value?.find(r => r.values?.[0]?.[0] === code);
-        if (row) {
-          let html = "";
-          const values = row.values[0];
-
-          values.forEach((val, i) => {
-            const colName = colNames[i];
-
-            // Nếu là cột date thì parse + format
-            if (dateColumns.has(colName)) {
-              const parsed = parseDateValue(val);
-              if (parsed) {
-                val = formatDateForDisplay(parsed);
-              } // nếu không parse được thì giữ nguyên
-            }
-
-            html += `<b>${colName}:</b> ${val ?? ""}<br>`;
-          });
-
-          infoEl.innerHTML = html;
-        } else {
-          infoEl.innerHTML = '<span class="error">Cannot Fount the Equipment!</span>';
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        infoEl.innerHTML = '<span class="error">Error When Get Data!</span>';
+        html += `<b>${colName}:</b> ${val ?? ""}<br>`;
       });
+
+      infoEl.innerHTML = html;
+
+    } else {
+      infoEl.innerHTML = '<span class="error">Cannot Found the Equipment!</span>';
     }
-  </script>
-</body>
+  })
+  .catch(err => {
+    infoEl.innerHTML = '<span class="error">Error When Get Data!</span>';
+  });
+}
 
 
+/* ==== Button SAVE usage ==== */
+
+document.getElementById("btnRecord").onclick = async function() {
+  const usageTime = document.getElementById("usageTime").value;
+  const remark = document.getElementById("remark").value;
+  const statusEl = document.getElementById("saveStatus");
+
+  if (!usageTime) {
+    statusEl.style.color = "red";
+    statusEl.textContent = "Please select Usage Time!";
+    return;
+  }
+
+  statusEl.style.color = "black";
+  statusEl.textContent = "Saving...";
+
+  // ===== Format new row đúng 5 cột của UsingRecord =====
+  const newRow = {
+    values: [[
+      code,               // Code
+      labDescription,     // LAB_Description
+      usageTime,          // Usage_Date
+      currentUser,        // User
+      remark || ""        // Remark
+    ]]
+  };
+
+  try {
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}/workbook/tables/${tableUsage}/rows/add`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newRow)
+      }
+    );
+
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    statusEl.style.color = "green";
+    statusEl.textContent = "Saved Successfully!";
+    document.getElementById("usageTime").value = "";
+    document.getElementById("remark").value = "";
+
+  } catch (err) {
+    statusEl.style.color = "red";
+    statusEl.textContent = "Error saving data!";
+  }
+};
+</script>
