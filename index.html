@@ -57,10 +57,10 @@
       "LAB_Description","FA_Description","Specification","Control_NO","Assets_NO",
       "Responsible_By","Team","Location","Picture","Function","Week Control",
       "Purchase_Date","Supplier","Received_By","PO_No","Calibration_Date",
-      "Due_Date","PM_Date","Next_PM","Status","Remark"
+      "Due_Date","PM_Date","Next_PM","Status","Status_From_Date","Remark"
     ];
 
-    const dateColumns = new Set(["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM"]);
+    const dateColumns = new Set(["Purchase_Date","Calibration_Date","Due_Date","PM_Date","Next_PM","Status_From_Date"]);
     const usageColNames = ["Code","LAB_Description","Usage_Date","User","Remark"];
 
     function excelSerialToDate(serial) {
@@ -213,6 +213,7 @@
   </script>
 </body>
 </html>
+
 
 
 
