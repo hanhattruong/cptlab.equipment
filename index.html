@@ -180,7 +180,7 @@
       if (!userName)  return statusEl.textContent = "Please enter User!";
       if (!code)      return statusEl.textContent = "No code in URL!";
 
-      const newRow = { values: [[code, labDescription, { "@odata.type": "String", "value": usageDate }, userName, remark]] };
+      const newRow = { values: [[code, labDescription, usageDate, userName, remark]] };
       statusEl.textContent = "Saving...";
 
       try {
@@ -213,5 +213,6 @@
   </script>
 </body>
 </html>
+
 
 
