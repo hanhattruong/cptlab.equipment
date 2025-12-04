@@ -144,25 +144,31 @@
           return;
         }
 
-        // --- Sort newest first ---
-        rows.sort((a, b) => {
-          const da = new Date(a.values[0][2]);
-          const db = new Date(b.values[0][2]);
-          return db - da;
-        });
+        // --- Sort newest first (decimal + string đều đọc được) ---
+rows.sort((a, b) => {
+  const da = parseDateValue(a.values[0][2]);
+  const db = parseDateValue(b.values[0][2]);
+  return db - da;
+});
 
         tbody.innerHTML = "";
-        rows.forEach(r => {
-          const v = r.values[0];
-          tbody.innerHTML += `
-            <tr>
-              <td>${v[0] ?? ""}</td>
-              <td>${v[1] ?? ""}</td>
-              <td>${v[2] ?? ""}</td>
-              <td>${v[3] ?? ""}</td>
-              <td>${v[4] ?? ""}</td>
-            </tr>`;
-        });
+rows.forEach(r => {
+  const v = r.values[0];
+
+  // Convert Excel decimal hoặc string ISO
+  let displayDate = v[2] ?? "";
+  const parsed = parseDateValue(v[2]);
+  if (parsed) displayDate = formatDateForDisplay(parsed);
+
+  tbody.innerHTML += `
+    <tr>
+      <td>${v[0] ?? ""}</td>
+      <td>${v[1] ?? ""}</td>
+      <td>${displayDate}</td>
+      <td>${v[3] ?? ""}</td>
+      <td>${v[4] ?? ""}</td>
+    </tr>`;
+});
       })
       .catch(() => {
         tbody.innerHTML = '<tr><td colspan="5">Error loading usage records!</td></tr>';
@@ -213,6 +219,7 @@
   </script>
 </body>
 </html>
+
 
 
 
